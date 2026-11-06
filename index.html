@@ -4,167 +4,139 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-  <title>純前端離線抽獎系統 (Offline Lucky Draw v1.2.0)</title>
-  <style>:root{--bg-base:#111215;--bg-panel:#181a1f;--bg-surface:#20232a;--bg-card:#272a33;--border-subtle:rgba(255,255,255,0.08);--border-focus:rgba(212,175,55,0.5);--gold-primary:#d4af37;--gold-light:#f3e5ab;--gold-dark:#aa820a;--crimson-accent:#c53030;--emerald-accent:#2e7d32;--text-main:#f4f4f5;--text-sub:#a1a1aa;--text-muted:#71717a;--radius-sm:6px;--radius-md:10px;--radius-lg:16px;--shadow-elevation:0 12px 32px rgba(0,0,0,0.45);--font-stack:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}*{box-sizing:border-box;margin:0;padding:0}body{background-color:var(--bg-base);color:var(--text-main);font-family:var(--font-stack);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;letter-spacing:-0.01em;user-select:none}header{background:var(--bg-panel);border-bottom:1px solid var(--border-subtle);padding:14px 28px;display:flex;justify-content:space-between;align-items:center;z-index:20}.brand-group{display:flex;align-items:center;gap:14px}.brand-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--gold-primary),var(--gold-dark));display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(212,175,55,0.3)}.brand-mark svg{width:18px;height:18px;fill:#111215}.brand-title{font-size:1.15rem;font-weight:700;color:#fff;letter-spacing:0.02em}.brand-tag{font-size:0.75rem;color:var(--gold-light);background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.25);padding:2px 8px;border-radius:4px;font-weight:500}main{flex:1;display:flex;flex-direction:column;position:relative}.view-panel{display:none;width:100%;height:100%}.view-panel.active{display:flex;flex-direction:column;flex:1}#view-setup{max-width:1200px;width:100%;margin:24px auto;padding:0 24px;gap:20px}.workspace-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:24px}@media (max-width:900px){.workspace-grid{grid-template-columns:1fr}}.panel-box{background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:20px 24px;display:flex;flex-direction:column;gap:16px;box-shadow:0 4px 20px rgba(0,0,0,0.25)}.panel-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--border-subtle)}.panel-caption{font-size:0.95rem;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px}.textarea-wrapper{position:relative;display:flex;flex-direction:column}textarea{width:100%;height:240px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:var(--radius-md);color:#fff;padding:14px;font-size:0.95rem;line-height:1.6;resize:vertical;font-family:inherit;outline:none;transition:border-color 0.2s}textarea:focus{border-color:var(--border-focus)}.tools-toolbar{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}.btn-tool{background:var(--bg-surface);border:1px solid var(--border-subtle);color:var(--text-sub);padding:5px 12px;border-radius:var(--radius-sm);font-size:0.8rem;cursor:pointer;transition:all 0.15s}.btn-tool:hover{background:var(--bg-card);color:#fff}.file-dropzone{border:1.5px dashed var(--border-subtle);border-radius:var(--radius-md);padding:12px;text-align:center;color:var(--text-sub);cursor:pointer;font-size:0.85rem;transition:all 0.2s;background:rgba(255,255,255,0.015)}.file-dropzone:hover{border-color:var(--gold-primary);background:rgba(212,175,55,0.04);color:#fff}.order-config-bar{display:flex;align-items:center;justify-content:space-between;background:var(--bg-surface);border:1px solid var(--border-subtle);padding:10px 14px;border-radius:var(--radius-md)}.order-config-bar span{font-size:0.85rem;color:var(--text-sub)}.styled-select{background:var(--bg-base);border:1px solid var(--border-subtle);color:#fff;padding:5px 10px;border-radius:var(--radius-sm);font-size:0.82rem;outline:none;cursor:pointer}.prizes-container{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:4px}.prize-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:10px 14px;display:flex;align-items:center;gap:10px;transition:transform 0.15s,border-color 0.15s}.prize-card:hover{border-color:rgba(255,255,255,0.18)}.prize-rank-pill{font-size:0.72rem;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(212,175,55,0.15);color:var(--gold-primary);border:1px solid rgba(212,175,55,0.3);white-space:nowrap;min-width:68px;text-align:center}.prize-rank-pill.grand{background:rgba(197,48,48,0.2);color:#feb2b2;border-color:rgba(197,48,48,0.4)}.prize-card input[type="text"]{flex:1;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:#fff;padding:6px 10px;font-size:0.9rem;outline:none}.prize-card input[type="text"]:focus{border-color:var(--border-focus)}.prize-card input[type="number"]{width:72px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:#fff;padding:6px 8px;font-size:0.9rem;text-align:center;outline:none}.reorder-btns{display:flex;flex-direction:column;gap:2px}.btn-icon{background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:3px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:0.75rem}.btn-icon:hover{color:#fff;background:rgba(255,255,255,0.08)}.btn-icon.del:hover{color:#f87171}.rules-row{display:flex;gap:20px;padding:8px 0;color:var(--text-sub);font-size:0.85rem}.checkbox-item{display:flex;align-items:center;gap:7px;cursor:pointer}.checkbox-item input{accent-color:var(--gold-primary);cursor:pointer}.actions-footer{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-top:1px solid var(--border-subtle);margin-top:8px}.btn-cta{padding:12px 32px;font-size:1rem;font-weight:700;border-radius:var(--radius-md);cursor:pointer;border:none;transition:all 0.2s cubic-bezier(0.16,1,0.3,1);display:inline-flex;align-items:center;gap:10px}.btn-gold-action{background:linear-gradient(135deg,#e5c07b 0%,#d4af37 100%);color:#111215;box-shadow:0 4px 18px rgba(212,175,55,0.35)}.btn-gold-action:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 24px rgba(212,175,55,0.5)}.btn-secondary-action{background:var(--bg-surface);color:var(--text-main);border:1px solid var(--border-subtle)}.btn-secondary-action:hover:not(:disabled){background:var(--bg-card);border-color:rgba(255,255,255,0.2)}#view-stage{padding:16px 36px 24px;height:calc(100vh - 65px);display:flex;flex-direction:column;justify-content:space-between}.stage-topbar{display:flex;justify-content:space-between;align-items:center;background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:14px 28px;box-shadow:var(--shadow-elevation)}.stage-tier-info{display:flex;flex-direction:column;gap:4px}.stage-round-pill{font-size:0.8rem;font-weight:700;color:var(--gold-light);letter-spacing:0.05em;text-transform:uppercase}.stage-prize-title{font-size:1.8rem;font-weight:900;color:#fff;letter-spacing:0.02em}.stage-stats-strip{display:flex;gap:16px;font-size:0.9rem;color:var(--text-sub)}.stat-badge{background:var(--bg-surface);border:1px solid var(--border-subtle);padding:6px 14px;border-radius:var(--radius-sm);display:flex;align-items:center;gap:6px}.stat-badge strong{color:#fff}.stage-arena{display:grid;grid-template-columns:1fr 340px;gap:32px;align-items:center;margin:auto 0;max-width:1300px;width:100%;align-self:center}@media (max-width:1000px){.stage-arena{grid-template-columns:1fr}.stage-feed-box{display:none !important}}.stage-spotlight{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}.wheel-assembly{position:relative;width:480px;height:480px;display:flex;align-items:center;justify-content:center}#wheel-canvas{width:480px;height:480px;border-radius:50%;box-shadow:0 16px 50px rgba(0,0,0,0.7),0 0 30px rgba(212,175,55,0.15)}.slot-machine-frame{width:100%;max-width:580px;height:220px;background:#0d0e12;border:2px solid var(--gold-dark);border-radius:20px;display:none;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 40px rgba(0,0,0,0.9),0 12px 40px rgba(0,0,0,0.6);position:relative}.slot-machine-frame::before,.slot-machine-frame::after{content:'';position:absolute;left:0;right:0;height:45px;pointer-events:none;z-index:3}.slot-machine-frame::before{top:0;background:linear-gradient(to bottom,#0d0e12,transparent)}.slot-machine-frame::after{bottom:0;background:linear-gradient(to top,#0d0e12,transparent)}.slot-machine-card{font-size:3.2rem;font-weight:900;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,0.9);letter-spacing:0.04em;text-align:center;padding:0 24px}.slot-machine-card.rolling{color:#f3e5ab;filter:blur(0.8px)}.slot-machine-card.winner{color:var(--gold-primary);animation:winnerBounce 0.5s ease infinite alternate}@keyframes winnerBounce{from{transform:scale(1)}to{transform:scale(1.08)}}.stage-feed-box{background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:16px 20px;height:480px;display:flex;flex-direction:column;box-shadow:var(--shadow-elevation)}.feed-header{font-size:0.95rem;font-weight:700;color:#fff;display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--border-subtle)}.feed-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-top:12px;padding-right:4px}.feed-item{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;animation:feedEnter 0.3s cubic-bezier(0.16,1,0.3,1)}@keyframes feedEnter{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}.feed-tier-name{font-size:0.78rem;font-weight:700;color:var(--gold-primary)}.feed-winner-name{font-size:1.15rem;font-weight:800;color:#fff;margin-top:2px}.stage-controls{display:flex;justify-content:space-between;align-items:center;background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:16px 28px}.stage-instructions{font-size:0.9rem;color:var(--text-sub)}.stage-instructions kbd{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:4px;padding:2px 8px;font-size:0.8rem;color:#fff;margin:0 4px}.btn-stage-spin{padding:16px 52px;font-size:1.4rem;font-weight:900;letter-spacing:0.05em;border-radius:50px;cursor:pointer;border:none;background:linear-gradient(135deg,#f3e5ab 0%,#d4af37 60%,#aa820a 100%);color:#111215;box-shadow:0 8px 30px rgba(212,175,55,0.45);transition:all 0.2s cubic-bezier(0.16,1,0.3,1)}.btn-stage-spin:hover:not(:disabled){transform:translateY(-2px) scale(1.02);box-shadow:0 12px 36px rgba(212,175,55,0.6)}.btn-stage-spin:disabled{opacity:0.4;cursor:not-allowed;transform:none}.btn-stage-spin.btn-conclude{background:linear-gradient(135deg,#fb923c 0%,#ea580c 100%);color:#fff;box-shadow:0 8px 30px rgba(234,88,12,0.45)}.modal-backdrop{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(10,11,14,0.88);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:200}.modal-backdrop.active{display:flex}.ceremony-card{background:radial-gradient(circle at 50% 20%,#2a251a 0%,#16181f 80%);border:1.5px solid var(--gold-primary);border-radius:24px;padding:44px 56px;text-align:center;max-width:520px;width:90%;box-shadow:0 24px 60px rgba(0,0,0,0.9),0 0 50px rgba(212,175,55,0.35);animation:ceremonyPop 0.4s cubic-bezier(0.16,1,0.3,1)}@keyframes ceremonyPop{from{transform:scale(0.85);opacity:0}to{transform:scale(1);opacity:1}}.ceremony-tier{color:var(--gold-primary);font-size:1.15rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase}.ceremony-name{font-size:3.6rem;font-weight:900;color:#ffffff;margin:16px 0 28px;text-shadow:0 4px 30px rgba(212,175,55,0.5);word-break:break-all}.dialog-window{background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:26px 30px;max-width:440px;width:90%;box-shadow:0 24px 60px rgba(0,0,0,0.8);display:flex;flex-direction:column;gap:16px}.dialog-headline{font-size:1.2rem;font-weight:800;color:#fff}.dialog-body{font-size:0.95rem;color:var(--text-sub);line-height:1.6}.dialog-foot{display:flex;justify-content:flex-end;gap:12px;margin-top:4px}#confetti-canvas{position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:150}.hidden{display:none !important}</style>
+  <title>純前端離線抽獎大會系統 (Offline Lucky Draw)</title>
+  <style>:root{--bg-base:#111215;--bg-panel:#181a1f;--bg-surface:#20232a;--bg-card:#272a33;--border-subtle:rgba(255,255,255,0.08);--border-focus:rgba(212,175,55,0.5);--gold-primary:#d4af37;--gold-light:#f3e5ab;--gold-dark:#aa820a;--accent-color:#d4af37;--text-main:#f4f4f5;--text-sub:#a1a1aa;--text-muted:#71717a;--radius-sm:6px;--radius-md:10px;--radius-lg:16px;--font-stack:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang TC","Microsoft JhengHei",sans-serif}body[data-theme="ROYAL_CRIMSON"]{--bg-base:#14090b;--bg-panel:#1c0e11;--bg-surface:#261318;--bg-card:#321820;--gold-primary:#e53e3e;--gold-light:#feb2b2;--gold-dark:#9b2c2c;--accent-color:#e53e3e;--border-focus:rgba(229,62,62,0.5)}body[data-theme="MIDNIGHT_SAPPHIRE"]{--bg-base:#080d1a;--bg-panel:#0e162a;--bg-surface:#14203d;--bg-card:#1c2c54;--gold-primary:#38bdf8;--gold-light:#bae6fd;--gold-dark:#0284c7;--accent-color:#38bdf8;--border-focus:rgba(56,189,248,0.5)}body[data-theme="EMERALD_PALACE"]{--bg-base:#07130e;--bg-panel:#0d1e17;--bg-surface:#132a21;--bg-card:#1b382d;--gold-primary:#10b981;--gold-light:#a7f3d0;--gold-dark:#047857;--accent-color:#10b981;--border-focus:rgba(16,185,129,0.5)}*{box-sizing:border-box;margin:0;padding:0}body{background-color:var(--bg-base);color:var(--text-main);font-family:var(--font-stack);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;user-select:none;transition:background-color 0.3s ease}header{background:var(--bg-panel);border-bottom:1px solid var(--border-subtle);padding:12px 28px;display:flex;justify-content:space-between;align-items:center;z-index:20}.brand-group{display:flex;align-items:center;gap:12px}.brand-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--gold-primary),var(--gold-dark));display:flex;align-items:center;justify-content:center}.brand-mark svg{width:18px;height:18px;fill:#111215}.brand-title{font-size:1.15rem;font-weight:700;color:#fff}.badge-pill{font-size:0.72rem;color:var(--gold-light);background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);padding:3px 8px;border-radius:4px}main{flex:1;display:flex;flex-direction:column;position:relative}.view-panel{display:none;width:100%;height:100%}.view-panel.active{display:flex;flex-direction:column;flex:1}#view-setup{max-width:1200px;width:100%;margin:20px auto;padding:0 20px;gap:18px}.workspace-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media (max-width:860px){.workspace-grid{grid-template-columns:1fr}}.panel-box{background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:18px 22px;display:flex;flex-direction:column;gap:14px}.panel-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--border-subtle)}.panel-caption{font-size:0.95rem;font-weight:700;color:var(--text-main)}.event-name-input{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:#fff;padding:6px 12px;font-size:0.95rem;width:220px;outline:none}.event-name-input:focus{border-color:var(--border-focus)}textarea{width:100%;height:210px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:var(--radius-md);color:#fff;padding:12px;font-size:0.9rem;resize:vertical;font-family:inherit;outline:none}textarea:focus{border-color:var(--border-focus)}.tools-toolbar{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}.btn-tool{background:var(--bg-surface);border:1px solid var(--border-subtle);color:var(--text-sub);padding:4px 10px;border-radius:var(--radius-sm);font-size:0.78rem;cursor:pointer}.btn-tool:hover{background:var(--bg-card);color:#fff}.file-dropzone{border:1.5px dashed var(--border-subtle);border-radius:var(--radius-md);padding:10px;text-align:center;color:var(--text-sub);cursor:pointer;font-size:0.82rem}.file-dropzone:hover{border-color:var(--gold-primary);color:#fff}.order-config-bar{display:flex;align-items:center;justify-content:space-between;background:var(--bg-surface);border:1px solid var(--border-subtle);padding:8px 12px;border-radius:var(--radius-md)}.styled-select{background:var(--bg-base);border:1px solid var(--border-subtle);color:#fff;padding:4px 8px;border-radius:var(--radius-sm);font-size:0.8rem;outline:none;cursor:pointer}.prizes-container{display:flex;flex-direction:column;gap:8px;max-height:250px;overflow-y:auto;padding-right:4px}.prize-card{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:8px 12px;display:flex;align-items:center;gap:8px}.prize-rank-pill{font-size:0.7rem;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(212,175,55,0.15);color:var(--gold-primary);border:1px solid rgba(212,175,55,0.3);min-width:66px;text-align:center}.prize-card input[type="text"]{flex:1;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:#fff;padding:4px 8px;font-size:0.88rem;outline:none}.prize-card input[type="number"]{width:65px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:#fff;padding:4px 6px;font-size:0.88rem;text-align:center}.reorder-btns{display:flex;flex-direction:column;gap:1px}.btn-icon{background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:2px;border-radius:3px;font-size:0.72rem}.btn-icon:hover{color:#fff}.rules-row{display:flex;gap:16px;padding:6px 0;color:var(--text-sub);font-size:0.82rem;align-items:center;flex-wrap:wrap}.checkbox-item{display:flex;align-items:center;gap:6px;cursor:pointer}.checkbox-item input{accent-color:var(--gold-primary);cursor:pointer}.actions-footer{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-top:1px solid var(--border-subtle)}.btn-cta{padding:10px 28px;font-size:0.95rem;font-weight:700;border-radius:var(--radius-md);cursor:pointer;border:none;display:inline-flex;align-items:center;gap:8px}.btn-gold-action{background:linear-gradient(135deg,var(--gold-light) 0%,var(--gold-primary) 100%);color:#111215;box-shadow:0 4px 16px rgba(0,0,0,0.4)}.btn-gold-action:hover:not(:disabled){transform:translateY(-1px)}.btn-secondary-action{background:var(--bg-surface);color:var(--text-main);border:1px solid var(--border-subtle)}#view-stage{padding:14px 28px;height:calc(100vh - 60px);display:flex;flex-direction:column;justify-content:space-between}.stage-topbar{display:flex;justify-content:space-between;align-items:center;background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:12px 24px}.stage-round-pill{font-size:0.75rem;font-weight:700;color:var(--gold-light)}.stage-prize-title{font-size:1.6rem;font-weight:900;color:#fff}.stage-stats-strip{display:flex;gap:12px;font-size:0.85rem;color:var(--text-sub)}.stat-badge{background:var(--bg-surface);border:1px solid var(--border-subtle);padding:4px 10px;border-radius:var(--radius-sm)}.stat-badge strong{color:#fff;margin-left:4px}.stage-arena{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:center;margin:auto 0;max-width:1240px;width:100%;align-self:center}@media (max-width:950px){.stage-arena{grid-template-columns:1fr}.stage-feed-box{display:none !important}}.stage-spotlight{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;min-height:440px}#stage-canvas{width:480px;height:440px;border-radius:var(--radius-lg);box-shadow:0 16px 40px rgba(0,0,0,0.6)}.stage-feed-box{background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:14px 18px;height:440px;display:flex;flex-direction:column}.feed-header{font-size:0.9rem;font-weight:700;color:#fff;display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--border-subtle)}.feed-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-top:10px}.feed-item{background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:8px 12px;display:flex;justify-content:space-between;align-items:center}.feed-tier-name{font-size:0.75rem;font-weight:700;color:var(--gold-primary)}.feed-winner-name{font-size:1.05rem;font-weight:800;color:#fff}.stage-controls{display:flex;justify-content:space-between;align-items:center;background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:14px 24px}.btn-stage-spin{padding:14px 48px;font-size:1.3rem;font-weight:900;border-radius:50px;cursor:pointer;border:none;background:linear-gradient(135deg,var(--gold-light) 0%,var(--gold-primary) 100%);color:#111215;box-shadow:0 6px 25px rgba(0,0,0,0.5)}.btn-stage-spin:disabled{opacity:0.4;cursor:not-allowed}.btn-stage-spin.btn-conclude{background:linear-gradient(135deg,#fb923c 0%,#ea580c 100%);color:#fff}.modal-backdrop{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(10,11,14,0.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:200}.modal-backdrop.active{display:flex}.ceremony-card{background:var(--bg-panel);border:1.5px solid var(--gold-primary);border-radius:20px;padding:36px 48px;text-align:center;max-width:480px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,0.9)}.ceremony-tier{color:var(--gold-primary);font-size:1.1rem;font-weight:700}.ceremony-name{font-size:3.2rem;font-weight:900;color:#fff;margin:14px 0 24px;word-break:break-all}.dialog-window{background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:22px 26px;max-width:420px;width:90%;display:flex;flex-direction:column;gap:14px}#confetti-canvas{position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:150}.hidden{display:none !important}</style>
 </head>
-<body>
+<body data-theme="OBSIDIAN_GOLD">
 
-  <!-- 頂部導覽列 -->
   <header>
     <div class="brand-group">
       <div class="brand-mark">
         <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
       </div>
       <div>
-        <div class="brand-title">全離線抽獎大會系統</div>
+        <div class="brand-title" id="header-brand-title">年度慶典抽獎大會</div>
       </div>
-      <span class="brand-tag">純前端單檔 v1.2.0</span>
+      <span class="badge-pill" id="stage-mode-indicator">5大開獎模式 v1.3.0</span>
     </div>
 
-    <div style="display:flex; gap:10px;">
-      <button id="btn-fullscreen-toggle" class="btn-tool" title="全螢幕投屏模式">
-        ⛶ 全螢幕投屏
-      </button>
-      <button id="btn-emergency-edit" class="btn-tool hidden" style="color:var(--gold-light);">
-        ⮌ 返回設定
-      </button>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <select id="theme-selector" class="styled-select" title="更換經典配色主題框架">
+        <option value="OBSIDIAN_GOLD" selected>黑曜香檳金 (尊爵黑金)</option>
+        <option value="ROYAL_CRIMSON">皇家緋紅慶典 (春酒迎春)</option>
+        <option value="MIDNIGHT_SAPPHIRE">午夜深藍星鑽 (科技年會)</option>
+        <option value="EMERALD_PALACE">祖母綠翡翠殿 (富貴翡翠)</option>
+      </select>
+      <button id="btn-fullscreen-toggle" class="btn-tool" title="全螢幕投屏模式">⛶ 全螢幕</button>
+      <button id="btn-emergency-edit" class="btn-tool hidden" style="color:var(--gold-light);">⮌ 返回設定</button>
     </div>
   </header>
 
   <main>
-    <!-- 設定面板 (SETUP WORKSPACE) -->
+    <!-- 設定面板 (SETUP) -->
     <div id="view-setup" class="view-panel active">
       <div class="workspace-grid">
-        <!-- 候選人名單面板 -->
         <div class="panel-box">
           <div class="panel-header">
-            <span class="panel-caption">
-              候選人名冊
-            </span>
-            <span class="brand-tag" id="candidate-count-badge">0 人登記</span>
+            <span class="panel-caption">活動名稱與名冊</span>
+            <input type="text" id="input-event-name" class="event-name-input" value="年度慶典抽獎大會" placeholder="大會活動名稱" title="輸入大會名稱">
           </div>
 
-          <div class="textarea-wrapper">
-            <textarea id="input-candidates" placeholder="在此處每行輸入一位候選人姓名，例如：&#10;陳柏宇&#10;林冠廷&#10;黃詩婷&#10;張家豪&#10;李雅婷"></textarea>
+          <div>
+            <textarea id="input-candidates" placeholder="請在此貼入名單，每行一人&#10;例如：&#10;陳柏宇&#10;林冠廷&#10;黃詩婷&#10;張家豪&#10;李雅婷"></textarea>
             <div class="tools-toolbar">
-              <button id="btn-load-sample" class="btn-tool">載入範例名單</button>
-              <button id="btn-dedup-names" class="btn-tool">移除重複名單</button>
+              <button id="btn-load-sample" class="btn-tool">載入範例 (30人)</button>
+              <button id="btn-dedup-names" class="btn-tool">移除重複人名</button>
               <button id="btn-clear-names" class="btn-tool">清空名冊</button>
+              <span style="font-size:0.78rem; color:var(--text-muted); margin-left:auto; align-self:center;" id="candidate-count-badge">0 人登記</span>
             </div>
           </div>
 
           <div class="file-dropzone" id="file-dropzone">
-            將本機 .txt 或 .csv 名冊檔案拖曳至此直接匯入
+            點此或拖曳 .txt / .csv 名單檔案至此匯入
             <input type="file" id="file-input" accept=".txt,.csv" style="display:none;">
           </div>
         </div>
 
-        <!-- 獎項配置面板 -->
         <div class="panel-box">
           <div class="panel-header">
-            <span class="panel-caption">
-              獎項層級與順位
-            </span>
+            <span class="panel-caption">獎項與開獎規則</span>
             <button id="btn-add-prize" class="btn-tool" style="color:var(--gold-light);">+ 新增獎項</button>
           </div>
 
           <div class="order-config-bar">
-            <span>大會抽獎流程順序：</span>
+            <span style="font-size:0.8rem; color:var(--text-sub);">大會流程順序：</span>
             <select id="config-draw-order" class="styled-select">
-              <option value="BOTTOM_UP" selected>由小獎抽至大獎（暖場 ➔ 壓軸高潮）</option>
+              <option value="BOTTOM_UP" selected>由小獎抽至大獎（暖場 ➔ 壓軸大獎）</option>
               <option value="TOP_DOWN">由大獎抽至小獎（由上至下）</option>
             </select>
           </div>
 
-          <div class="prizes-container" id="prizes-list">
-            <!-- 動態插入獎項項目 -->
-          </div>
+          <div class="prizes-container" id="prizes-list"></div>
 
           <div class="rules-row">
             <label class="checkbox-item">
               <input type="checkbox" id="config-allow-duplicates"> 允許重複獲獎
             </label>
-            <label class="checkbox-item">
+            <div id="max-win-container" style="display:none; align-items:center; gap:6px;">
+              <span style="color:var(--text-muted);">每人上限：</span>
+              <input type="number" id="config-max-win-limit" min="1" max="10" value="2" style="width:50px; background:var(--bg-base); border:1px solid var(--border-subtle); border-radius:4px; color:#fff; text-align:center; padding:2px 4px; font-size:0.8rem;">
+              <span style="color:var(--text-muted);">次</span>
+            </div>
+            <label class="checkbox-item" style="margin-left:auto;">
               <input type="checkbox" id="config-auto-switch" checked> 抽滿自動推進次輪
             </label>
           </div>
         </div>
       </div>
 
-      <!-- 底部主要操作工具列 -->
       <div class="actions-footer">
-        <button id="btn-export-html" class="btn-cta btn-secondary-action" title="封裝為自包含獨立 HTML 單檔">
-          <svg style="width:16px;height:16px;fill:currentColor;" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-          匯出隨身攜帶 HTML
+        <button id="btn-export-html" class="btn-cta btn-secondary-action">
+          <svg style="width:15px;height:15px;fill:currentColor;" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          匯出隨身單檔 HTML
         </button>
-        <button id="btn-start-stage" class="btn-cta btn-gold-action">
-          進入抽獎大會舞台
-        </button>
+        <button id="btn-start-stage" class="btn-cta btn-gold-action">進入抽獎大會舞台</button>
       </div>
     </div>
 
-    <!-- 抽獎舞台 (STAGE THEATER) -->
+    <!-- 抽獎舞台 (STAGE) -->
     <div id="view-stage" class="view-panel">
       <div class="stage-topbar">
-        <div class="stage-tier-info">
-          <span class="stage-round-pill" id="stage-order-tag">大會抽獎 ｜ 第 1 輪次</span>
-          <span class="stage-prize-title" id="stage-prize-name">特獎</span>
+        <div>
+          <span class="stage-round-pill" id="stage-order-tag">大會抽獎 ｜ 第 1 輪</span>
+          <div class="stage-prize-title" id="stage-prize-name">特獎</div>
         </div>
 
         <div class="stage-stats-strip">
-          <div class="stat-badge">
-            <span>本輪剩額</span>
-            <strong id="stage-quota-remaining">0 / 0</strong>
-          </div>
-          <div class="stat-badge">
-            <span>候選池剩餘</span>
-            <strong id="stage-candidates-remaining">0 人</strong>
-          </div>
-          <button id="btn-export-csv" class="btn-tool" style="padding:6px 14px;">
-            匯出中獎名單 (CSV)
-          </button>
-          <button id="btn-reset-all" class="btn-tool" style="padding:6px 14px; color:#f87171;">
-            重置大會
-          </button>
+          <div class="stat-badge">本輪剩額<strong id="stage-quota-remaining">0 / 0</strong></div>
+          <div class="stat-badge">候選池剩餘<strong id="stage-candidates-remaining">0 人</strong></div>
+          <button id="btn-export-csv" class="btn-tool" style="padding:4px 10px;">匯出 CSV</button>
+          <button id="btn-reset-all" class="btn-tool" style="padding:4px 10px; color:#f87171;">重置大會</button>
         </div>
       </div>
 
       <div class="stage-arena">
-        <!-- 核心物理抽獎台 -->
         <div class="stage-spotlight">
-          <!-- Canvas 彩色輪盤 (<= 30 人) -->
-          <div class="wheel-assembly" id="wheel-wrapper">
-            <canvas id="wheel-canvas" width="480" height="480"></canvas>
-          </div>
-
-          <!-- Slot Reel 機械滾輪卡片 (> 30 人) -->
-          <div id="slot-machine-frame" class="slot-machine-frame">
-            <div class="slot-machine-card current">準備抽獎</div>
-          </div>
+          <!-- 核心動態渲染 Canvas (支援 5 種模式繪製) -->
+          <canvas id="stage-canvas" width="520" height="420"></canvas>
         </div>
 
-        <!-- 現場即時榮譽榜 (Live Winner Honor Roll) -->
         <div class="stage-feed-box">
           <div class="feed-header">
-            <span>現場中獎榮譽榜</span>
-            <span class="brand-tag" id="history-counter">0 人</span>
+            <span>現場即時榮譽榜</span>
+            <span class="badge-pill" id="history-counter">0 人獲獎</span>
           </div>
           <div class="feed-scroll" id="history-feed">
-            <div style="color:var(--text-muted); text-align:center; margin-top:40px; font-size:0.85rem;">
-              大會即將開獎，拭目以待
-            </div>
+            <div style="color:var(--text-muted); text-align:center; margin-top:40px; font-size:0.82rem;">大會即將開獎，拭目以待</div>
           </div>
         </div>
       </div>
 
-      <!-- 舞台底部核心互動列 -->
       <div class="stage-controls">
-        <div class="stage-instructions" id="stage-status-hint">
-          輕按 <kbd>Space 空白鍵</kbd> 或點擊右側按鈕開始搖獎
+        <div style="font-size:0.85rem; color:var(--text-sub);" id="stage-status-hint">
+          輕按 <span style="background:var(--bg-surface); padding:2px 6px; border-radius:4px; color:#fff;">Space 空白鍵</span> 開始搖獎
         </div>
-        <button id="btn-spin" class="btn-stage-spin">
-          開始抽獎
-        </button>
+        <button id="btn-spin" class="btn-stage-spin">開始抽獎</button>
       </div>
     </div>
   </main>
@@ -174,1063 +146,31 @@
     <div class="ceremony-card">
       <div class="ceremony-tier" id="modal-prize-tag">恭喜榮獲 特獎</div>
       <div class="ceremony-name" id="modal-winner-name">得獎人姓名</div>
-      <button id="btn-modal-continue" class="btn-cta btn-gold-action" style="padding:12px 40px; font-size:1.15rem;">
+      <button id="btn-modal-continue" class="btn-cta btn-gold-action" style="padding:10px 36px; font-size:1.1rem;">
         抽取下一位 (Space)
       </button>
     </div>
   </div>
 
-  <!-- 內嵌自訂對話框 (Dialog Window，完全不受 iframe 限制) -->
+  <!-- 自訂確認對話框 -->
   <div id="dialog-modal-overlay" class="modal-backdrop">
     <div class="dialog-window">
-      <div class="dialog-headline" id="dialog-title">系統提示</div>
-      <div class="dialog-body" id="dialog-msg">訊息說明內容</div>
-      <div class="dialog-foot">
-        <button id="dialog-btn-cancel" class="btn-tool" style="padding:8px 18px;">取消</button>
-        <button id="dialog-btn-confirm" class="btn-cta btn-gold-action" style="padding:8px 22px; font-size:0.95rem;">確定</button>
+      <div style="font-size:1.1rem; font-weight:800; color:#fff;" id="dialog-title">系統提示</div>
+      <div style="font-size:0.9rem; color:var(--text-sub); line-height:1.5;" id="dialog-msg">訊息說明內容</div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
+        <button id="dialog-btn-cancel" class="btn-tool" style="padding:6px 14px;">取消</button>
+        <button id="dialog-btn-confirm" class="btn-cta btn-gold-action" style="padding:6px 18px; font-size:0.9rem;">確定</button>
       </div>
     </div>
   </div>
 
-  <!-- 全螢幕紙花 Canvas -->
   <canvas id="confetti-canvas"></canvas>
 
-  <!-- 自克隆資料容器 -->
   <script id="__INITIAL_BUNDLE__" type="text/plain">
   </script>
 
   <script>
-  
-  function getSecureRandomIndex(max) {
-    if (typeof max !== 'number' || max <= 1) return 0;
-    var cryptoObj = (typeof window !== 'undefined' && window.crypto) || (typeof globalThis !== 'undefined' && globalThis.crypto);
-    if (!cryptoObj || !cryptoObj.getRandomValues) throw new Error('CSPRNG unavailable');
-    var limit = Math.floor(0x100000000 / max) * max;
-    var array = new Uint32Array(1);
-    var randVal;
-    do {
-      cryptoObj.getRandomValues(array);
-      randVal = array[0];
-    } while (randVal >= limit);
-    return randVal % max;
-  }
-
-  function parseCandidateText(rawText) {
-    if (!rawText || typeof rawText !== 'string') return [];
-    return rawText.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
-  }
-
-  function generateId() {
-    var arr = new Uint8Array(8);
-    var cryptoObj = (typeof window !== 'undefined' && window.crypto) || (typeof globalThis !== 'undefined' && globalThis.crypto);
-    if (cryptoObj && cryptoObj.getRandomValues) {
-      cryptoObj.getRandomValues(arr);
-      return Array.from(arr).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
-    }
-    throw new Error('Crypto API required');
-  }
-
-  function StateManager(opts) {
-    opts = opts || {};
-    this.rawInputText = typeof opts.rawInputText === 'string' ? opts.rawInputText : '';
-    this.candidatePool = Array.isArray(opts.candidatePool) ? opts.candidatePool.slice() : parseCandidateText(this.rawInputText);
-    this.initialCandidates = this.candidatePool.slice();
-    this.prizes = Array.isArray(opts.prizes) ? opts.prizes.map(function(p){
-      var t = Math.max(1, parseInt(p.totalQuota, 10) || 1);
-      return { id: p.id || generateId(), name: String(p.name || '獎項'), totalQuota: t, remainingQuota: typeof p.remainingQuota === 'number' ? Math.max(0, parseInt(p.remainingQuota, 10)) : t };
-    }) : [];
-    this.config = {
-      allowDuplicates: Boolean(opts.config && opts.config.allowDuplicates),
-      autoSwitchTier: opts.config && typeof opts.config.autoSwitchTier === 'boolean' ? opts.config.autoSwitchTier : true,
-      drawOrder: opts.config && opts.config.drawOrder ? opts.config.drawOrder : 'BOTTOM_UP',
-      currentPrizeId: opts.config && opts.config.currentPrizeId ? opts.config.currentPrizeId : '',
-      spinDurationMs: opts.config && typeof opts.config.spinDurationMs === 'number' ? opts.config.spinDurationMs : 4000
-    };
-    if (!this.config.currentPrizeId && this.prizes.length > 0) {
-      var ord = this.getOrderedPrizes();
-      if (ord.length > 0) this.config.currentPrizeId = ord[0].id;
-    }
-    this.history = Array.isArray(opts.history) ? opts.history.slice() : [];
-    this.status = opts.status || 'SETUP';
-    this._pendingSpin = null;
-    this._listeners = [];
-  }
-
-  StateManager.prototype.subscribe = function(fn) {
-    this._listeners.push(fn);
-    var self = this;
-    return function() { self._listeners = self._listeners.filter(function(l){ return l !== fn; }); };
-  };
-
-  StateManager.prototype._notify = function(event, data) {
-    var s = this.getState();
-    this._listeners.forEach(function(l) { try { l(event, s, data); } catch(e){} });
-  };
-
-  StateManager.prototype.getState = function() {
-    return {
-      rawInputText: this.rawInputText,
-      candidatePool: this.candidatePool.slice(),
-      initialCandidates: this.initialCandidates.slice(),
-      prizes: this.prizes.map(function(p){ return Object.assign({}, p); }),
-      config: Object.assign({}, this.config),
-      history: this.history.map(function(h){ return Object.assign({}, h); }),
-      status: this.status,
-      pendingSpin: this._pendingSpin ? Object.assign({}, this._pendingSpin) : null
-    };
-  };
-
-  StateManager.prototype.setInputText = function(text) {
-    this.rawInputText = String(text || '');
-    this.candidatePool = parseCandidateText(this.rawInputText);
-    this.initialCandidates = this.candidatePool.slice();
-    this.validate();
-    this._notify('INPUT_CHANGED');
-  };
-
-  StateManager.prototype.getOrderedPrizes = function() {
-    var list = this.prizes.slice();
-    return this.config.drawOrder === 'BOTTOM_UP' ? list.reverse() : list;
-  };
-
-  StateManager.prototype.movePrize = function(fromIndex, toIndex) {
-    if (fromIndex < 0 || fromIndex >= this.prizes.length || toIndex < 0 || toIndex >= this.prizes.length) return;
-    var item = this.prizes.splice(fromIndex, 1)[0];
-    this.prizes.splice(toIndex, 0, item);
-    var cur = this.getCurrentPrize();
-    if (cur) this.config.currentPrizeId = cur.id;
-    this.validate();
-    this._notify('PRIZES_CHANGED');
-  };
-
-  StateManager.prototype.setPrizes = function(prizes) {
-    if (!Array.isArray(prizes)) return;
-    this.prizes = prizes.map(function(p){
-      var t = Math.max(1, parseInt(p.totalQuota, 10) || 1);
-      return { id: p.id || generateId(), name: String(p.name || '獎項'), totalQuota: t, remainingQuota: typeof p.remainingQuota === 'number' ? Math.max(0, parseInt(p.remainingQuota, 10)) : t };
-    });
-    var ord = this.getOrderedPrizes();
-    var firstAvail = ord.find(function(p){ return p.remainingQuota > 0; });
-    this.config.currentPrizeId = firstAvail ? firstAvail.id : (this.prizes[0] ? this.prizes[0].id : '');
-    this.validate();
-    this._notify('PRIZES_CHANGED');
-  };
-
-  StateManager.prototype.addPrize = function(name, quota) {
-    var total = Math.max(1, parseInt(quota, 10) || 1);
-    var prize = { id: generateId(), name: String(name || '新獎項'), totalQuota: total, remainingQuota: total };
-    this.prizes.push(prize);
-    var ord = this.getOrderedPrizes();
-    var firstAvail = ord.find(function(p){ return p.remainingQuota > 0; });
-    if (firstAvail) this.config.currentPrizeId = firstAvail.id;
-    this.validate();
-    this._notify('PRIZE_ADDED', prize);
-    return prize;
-  };
-
-  StateManager.prototype.removePrize = function(id) {
-    this.prizes = this.prizes.filter(function(p){ return p.id !== id; });
-    var ord = this.getOrderedPrizes();
-    var firstAvail = ord.find(function(p){ return p.remainingQuota > 0; });
-    this.config.currentPrizeId = firstAvail ? firstAvail.id : '';
-    this.validate();
-    this._notify('PRIZE_REMOVED', id);
-  };
-
-  StateManager.prototype.updateConfig = function(cfg) {
-    if (!cfg) return;
-    if (typeof cfg.allowDuplicates === 'boolean') this.config.allowDuplicates = cfg.allowDuplicates;
-    if (typeof cfg.autoSwitchTier === 'boolean') this.config.autoSwitchTier = cfg.autoSwitchTier;
-    if (cfg.drawOrder === 'BOTTOM_UP' || cfg.drawOrder === 'TOP_DOWN') {
-      this.config.drawOrder = cfg.drawOrder;
-      var cur = this.getCurrentPrize();
-      if (cur) this.config.currentPrizeId = cur.id;
-    }
-    if (typeof cfg.currentPrizeId === 'string') this.config.currentPrizeId = cfg.currentPrizeId;
-    if (typeof cfg.spinDurationMs === 'number') this.config.spinDurationMs = cfg.spinDurationMs;
-    this.validate();
-    this._notify('CONFIG_UPDATED');
-  };
-
-  StateManager.prototype.validate = function() {
-    if (this.status === 'SPINNING') return false;
-    var hasCan = this.candidatePool.length >= 1;
-    var totalRem = this.prizes.reduce(function(sum, p){ return sum + p.remainingQuota; }, 0);
-    if (hasCan && totalRem > 0 && this.prizes.length >= 1) {
-      if (this.status === 'SETUP' || this.status === 'PARTIAL_FILLED') this.status = 'READY';
-      return true;
-    } else {
-      if (this.status === 'READY') this.status = 'SETUP';
-      return false;
-    }
-  };
-
-  StateManager.prototype.getCurrentPrize = function() {
-    var id = this.config.currentPrizeId;
-    var p = this.prizes.find(function(item){ return item.id === id; });
-    if ((!p || p.remainingQuota <= 0) && this.prizes.length > 0) {
-      var ord = this.getOrderedPrizes();
-      p = ord.find(function(item){ return item.remainingQuota > 0; }) || ord[0];
-      if (p) this.config.currentPrizeId = p.id;
-    }
-    return p || null;
-  };
-
-  StateManager.prototype.startSpin = function() {
-    if (this.status !== 'READY') throw new Error('Not ready');
-    var prize = this.getCurrentPrize();
-    if (!prize || prize.remainingQuota <= 0) throw new Error('No quota');
-    if (this.candidatePool.length === 0) {
-      this.status = 'PARTIAL_FILLED';
-      this._notify('POOL_DEPLETED');
-      throw new Error('Pool empty');
-    }
-    var winnerIndex = getSecureRandomIndex(this.candidatePool.length);
-    var winnerName = this.candidatePool[winnerIndex];
-    this.status = 'SPINNING';
-    this._pendingSpin = { winnerIndex: winnerIndex, winnerName: winnerName, prizeId: prize.id, prizeName: prize.name };
-    this._notify('SPIN_STARTED', this._pendingSpin);
-    return this._pendingSpin;
-  };
-
-  StateManager.prototype.revealWinner = function() {
-    if (this.status !== 'SPINNING' || !this._pendingSpin) throw new Error('Not spinning');
-    var pending = this._pendingSpin;
-    var prize = this.prizes.find(function(p){ return p.id === pending.prizeId; });
-    if (prize && prize.remainingQuota > 0) prize.remainingQuota -= 1;
-    if (!this.config.allowDuplicates) this.candidatePool.splice(pending.winnerIndex, 1);
-    var record = {
-      sequence: this.history.length + 1,
-      prizeName: pending.prizeName,
-      winnerName: pending.winnerName,
-      timestamp: new Date().toISOString()
-    };
-    this.history.push(record);
-    this.status = 'REVEALED';
-    this._pendingSpin = null;
-    this._notify('WINNER_REVEALED', record);
-    return record;
-  };
-
-  StateManager.prototype.continueSpin = function() {
-    if (this.status !== 'REVEALED') throw new Error('Not revealed');
-    var cur = this.getCurrentPrize();
-    if (cur && cur.remainingQuota <= 0 && this.config.autoSwitchTier) {
-      var ord = this.getOrderedPrizes();
-      var next = ord.find(function(p){ return p.remainingQuota > 0; });
-      if (next) { this.config.currentPrizeId = next.id; cur = next; }
-    }
-    var rem = this.prizes.reduce(function(sum, p){ return sum + p.remainingQuota; }, 0);
-    if (rem <= 0) { this.status = 'COMPLETED'; this._notify('ALL_QUOTA_FILLED'); return this.status; }
-    if (this.candidatePool.length === 0) { this.status = 'PARTIAL_FILLED'; this._notify('POOL_DEPLETED'); return this.status; }
-    this.status = 'READY';
-    this._notify('READY_FOR_NEXT');
-    return this.status;
-  };
-
-  StateManager.prototype.finishDraw = function() {
-    this._pendingSpin = null;
-    this.status = 'COMPLETED';
-    this._notify('ALL_QUOTA_FILLED');
-    return this.status;
-  };
-
-  StateManager.prototype.emergencyEdit = function() {
-    this._pendingSpin = null;
-    this.status = 'SETUP';
-    this._notify('EMERGENCY_EDIT');
-  };
-
-  StateManager.prototype.reset = function() {
-    this._pendingSpin = null;
-    this.history = [];
-    this.candidatePool = this.initialCandidates.slice();
-    this.prizes.forEach(function(p){ p.remainingQuota = p.totalQuota; });
-    var ord = this.getOrderedPrizes();
-    if (ord.length > 0) this.config.currentPrizeId = ord[0].id;
-    this.status = 'SETUP';
-    this.validate();
-    this._notify('RESET_COMPLETED');
-  };
-
-  StateManager.prototype.exportBundleBase64 = function() {
-    var bundle = {
-      rawInputText: this.rawInputText,
-      candidatePool: this.candidatePool,
-      prizes: this.prizes,
-      config: this.config,
-      history: this.history,
-      exportedAt: new Date().toISOString()
-    };
-    return btoa(unescape(encodeURIComponent(JSON.stringify(bundle))));
-  };
-
-  StateManager.prototype.importBundleBase64 = function(b64) {
-    if (!b64 || typeof b64 !== 'string') return false;
-    try {
-      var json = decodeURIComponent(escape(atob(b64.trim())));
-      var bundle = JSON.parse(json);
-      if (bundle && typeof bundle === 'object') {
-        if (typeof bundle.rawInputText === 'string') this.rawInputText = bundle.rawInputText;
-        if (Array.isArray(bundle.candidatePool)) { this.candidatePool = bundle.candidatePool.slice(); this.initialCandidates = bundle.candidatePool.slice(); }
-        if (Array.isArray(bundle.prizes)) this.setPrizes(bundle.prizes);
-        if (bundle.config) this.updateConfig(bundle.config);
-        if (Array.isArray(bundle.history)) this.history = bundle.history.slice();
-        this.status = 'SETUP';
-        this.validate();
-        return true;
-      }
-    } catch(e) {}
-    return false;
-  };
-
-  
-  function AudioSynthesizer() {
-    this.ctx = null;
-    this.enabled = true;
-  }
-  AudioSynthesizer.prototype.init = function() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume().catch(function(){}); return; }
-    try {
-      var Cls = window.AudioContext || window.webkitAudioContext;
-      if (Cls) this.ctx = new Cls();
-    } catch(e) { this.enabled = false; }
-  };
-  AudioSynthesizer.prototype.playTick = function() {
-    if (!this.enabled) return;
-    this.init();
-    if (!this.ctx) return;
-    try {
-      var now = this.ctx.currentTime;
-      var osc = this.ctx.createOscillator();
-      var gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(650, now);
-      osc.frequency.exponentialRampToValueAtTime(140, now + 0.035);
-      gain.gain.setValueAtTime(0.25, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.04);
-    } catch(e){}
-  };
-  AudioSynthesizer.prototype.playFanfare = function() {
-    if (!this.enabled) return;
-    this.init();
-    if (!this.ctx) return;
-    try {
-      var self = this;
-      var notes = [
-        { freq: 523.25, time: 0.00, dur: 0.35 },
-        { freq: 659.25, time: 0.10, dur: 0.35 },
-        { freq: 783.99, time: 0.20, dur: 0.45 },
-        { freq: 1046.50, time: 0.32, dur: 1.1 }
-      ];
-      var base = this.ctx.currentTime;
-      notes.forEach(function(n) {
-        var osc = self.ctx.createOscillator();
-        var gain = self.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(n.freq, base + n.time);
-        gain.gain.setValueAtTime(0.001, base + n.time);
-        gain.gain.linearRampToValueAtTime(0.3, base + n.time + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.001, base + n.time + n.dur);
-        osc.connect(gain);
-        gain.connect(self.ctx.destination);
-        osc.start(base + n.time);
-        osc.stop(base + n.time + n.dur);
-      });
-    } catch(e){}
-  };
-
-  
-  var CONF_COLORS = ['#d4af37', '#f3e5ab', '#c53030', '#e53e3e', '#2b6cb0', '#319795', '#dd6b20', '#ffffff'];
-  function ConfettiEngine(cvs) {
-    this.canvas = cvs;
-    this.ctx = cvs ? cvs.getContext('2d') : null;
-    this.particles = [];
-    this.animId = null;
-    this.active = false;
-  }
-  ConfettiEngine.prototype.resize = function() {
-    if (this.canvas) {
-      this.canvas.width = window.innerWidth;
-      this.canvas.height = window.innerHeight;
-    }
-  };
-  ConfettiEngine.prototype.fire = function() {
-    this.stop();
-    this.resize();
-    var count = 150;
-    var w = this.canvas.width, h = this.canvas.height;
-    for (var i = 0; i < count; i++) {
-      var angle = Math.PI * 2 * Math.random();
-      var speed = 8 + Math.random() * 16;
-      this.particles.push({
-        x: w * 0.5 + (Math.random() - 0.5) * 60,
-        y: h * 0.42 + (Math.random() - 0.5) * 60,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 7,
-        size: 7 + Math.random() * 7,
-        color: CONF_COLORS[Math.floor(Math.random() * CONF_COLORS.length)],
-        rotation: Math.random() * 360,
-        rotSpeed: (Math.random() - 0.5) * 12,
-        alpha: 1,
-        decay: 0.006 + Math.random() * 0.006
-      });
-    }
-    this.active = true;
-    var self = this;
-    function loop() {
-      if (!self.active) return;
-      var ctx = self.ctx;
-      ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
-      for (var i = self.particles.length - 1; i >= 0; i--) {
-        var p = self.particles[i];
-        p.x += p.vx; p.y += p.vy;
-        p.vy += 0.35; p.vx *= 0.985; p.vy *= 0.985;
-        p.rotation += p.rotSpeed; p.alpha -= p.decay;
-        if (p.alpha <= 0 || p.y > self.canvas.height + 40) { self.particles.splice(i, 1); continue; }
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rotation * Math.PI) / 180);
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-        ctx.restore();
-      }
-      if (self.particles.length > 0) self.animId = requestAnimationFrame(loop);
-      else self.stop();
-    }
-    this.animId = requestAnimationFrame(loop);
-  };
-  ConfettiEngine.prototype.stop = function() {
-    this.active = false;
-    if (this.animId) { cancelAnimationFrame(this.animId); this.animId = null; }
-    this.particles = [];
-    if (this.ctx && this.canvas) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-  };
-
-  
-  var WHEEL_PALETTE = [
-    '#8b1e1e', '#1c3d5a', '#1a4731', '#744210',
-    '#975a16', '#2d3748', '#44337a', '#234e52'
-  ];
-  function easeOutQuint(t) { return 1 + (--t) * t * t * t * t; }
-
-  function RenderEngine(cvs, slotBox, audio) {
-    this.canvas = cvs;
-    this.ctx = cvs ? cvs.getContext('2d') : null;
-    this.slotBox = slotBox;
-    this.audio = audio;
-    this.candidates = [];
-    this.currentAngle = 0;
-    this.animId = null;
-    this.isSpinning = false;
-    this.mode = 'WHEEL';
-  }
-  RenderEngine.prototype.setCandidates = function(list) {
-    this.candidates = Array.isArray(list) ? list.slice() : [];
-    this.mode = this.candidates.length <= 30 ? 'WHEEL' : 'SLOT';
-    this.renderStatic();
-    return this.mode;
-  };
-  RenderEngine.prototype.renderStatic = function() {
-    var wrapper = document.getElementById('wheel-wrapper');
-    if (this.mode === 'WHEEL') {
-      if (this.slotBox) this.slotBox.style.display = 'none';
-      if (wrapper) wrapper.style.display = 'flex';
-      this._drawWheel(this.currentAngle);
-    } else {
-      if (wrapper) wrapper.style.display = 'none';
-      if (this.slotBox) {
-        this.slotBox.style.display = 'flex';
-        var txt = this.candidates.length > 0 ? this.candidates[0] : '準備開獎';
-        this.slotBox.innerHTML = '<div class="slot-machine-card current">' + escapeHtml(txt) + '</div>';
-      }
-    }
-  };
-  RenderEngine.prototype._drawWheel = function(angle) {
-    if (!this.canvas || !this.ctx || this.candidates.length === 0) return;
-    var ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
-    var cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 18;
-    ctx.clearRect(0, 0, w, h);
-    var count = this.candidates.length;
-    var slice = (Math.PI * 2) / count;
-
-    // 輪盤金屬外環
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 8, 0, Math.PI * 2);
-    ctx.fillStyle = '#22252e';
-    ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#d4af37';
-    ctx.stroke();
-
-    for (var i = 0; i < count; i++) {
-      var s = angle + i * slice;
-      var e = s + slice;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, r, s, e);
-      ctx.closePath();
-      ctx.fillStyle = WHEEL_PALETTE[i % WHEEL_PALETTE.length];
-      ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
-      ctx.stroke();
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(s + slice / 2);
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#f4f4f5';
-      ctx.font = 'bold ' + (count > 16 ? 13 : 16) + 'px sans-serif';
-      var name = this.candidates[i];
-      if (name.length > 7) name = name.substring(0, 6) + '…';
-      ctx.fillText(name, r - 24, 0);
-      ctx.restore();
-    }
-
-    // 中心黃銅圓軸
-    var grad = ctx.createRadialGradient(cx - 5, cy - 5, 2, cx, cy, 28);
-    grad.addColorStop(0, '#f3e5ab');
-    grad.addColorStop(0.6, '#d4af37');
-    grad.addColorStop(1, '#8c6b12');
-    ctx.beginPath();
-    ctx.arc(cx, cy, 28, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
-
-    // 頂部實體黃銅指針 (12 點鐘方向)
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - r + 18);
-    ctx.lineTo(cx - 15, cy - r - 16);
-    ctx.lineTo(cx + 15, cy - r - 16);
-    ctx.closePath();
-    ctx.fillStyle = '#d4af37';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
-    ctx.restore();
-  };
-
-  RenderEngine.prototype.spinTo = function(targetIndex, targetName, durationMs, onDone) {
-    this.stop();
-    this.isSpinning = true;
-    var self = this;
-    if (this.mode === 'WHEEL') {
-      var count = this.candidates.length;
-      var slice = (Math.PI * 2) / count;
-      var targetCenter = (Math.PI * 1.5) - (targetIndex * slice + slice / 2);
-      var extraRounds = 6 * Math.PI * 2;
-      var start = this.currentAngle % (Math.PI * 2);
-      var finish = start + extraRounds + (targetCenter - (start % (Math.PI * 2)));
-      if (finish <= start + extraRounds) finish += Math.PI * 2;
-
-      var t0 = performance.now();
-      var lastSlice = -1;
-      function stepWheel(now) {
-        if (!self.isSpinning) return;
-        var progress = Math.min(1, (now - t0) / durationMs);
-        var cur = start + (finish - start) * easeOutQuint(progress);
-        self.currentAngle = cur;
-        self._drawWheel(cur);
-
-        var cSlice = Math.floor(cur / slice) % count;
-        if (cSlice !== lastSlice) { lastSlice = cSlice; if (self.audio) self.audio.playTick(); }
-        if (progress < 1) self.animId = requestAnimationFrame(stepWheel);
-        else { self.isSpinning = false; self.animId = null; if (onDone) onDone(); }
-      }
-      this.animId = requestAnimationFrame(stepWheel);
-    } else {
-      var tStart = performance.now();
-      var lastTick = 0;
-      function stepSlot(now) {
-        if (!self.isSpinning) return;
-        var p = Math.min(1, (now - tStart) / durationMs);
-        if (p < 1) {
-          var interval = 40 + (1 - (1 - easeOutQuint(p))) * 240;
-          if (now - lastTick >= interval) {
-            lastTick = now;
-            var rand = self.candidates[Math.floor(Math.random() * self.candidates.length)] || '...';
-            self.slotBox.innerHTML = '<div class="slot-machine-card rolling">' + escapeHtml(rand) + '</div>';
-            if (self.audio) self.audio.playTick();
-          }
-          self.animId = requestAnimationFrame(stepSlot);
-        } else {
-          self.slotBox.innerHTML = '<div class="slot-machine-card winner">' + escapeHtml(targetName) + '</div>';
-          self.isSpinning = false;
-          self.animId = null;
-          if (onDone) onDone();
-        }
-      }
-      this.animId = requestAnimationFrame(stepSlot);
-    }
-  };
-
-  RenderEngine.prototype.stop = function() {
-    this.isSpinning = false;
-    if (this.animId) { cancelAnimationFrame(this.animId); this.animId = null; }
-  };
-
-  
-  function sanitizeCsvCell(v) {
-    if (v === null || v === undefined) return '""';
-    var s = String(v);
-    if (/^[=+\-@]/.test(s)) s = "'" + s;
-    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : '"' + s + '"';
-  }
-
-  function generateCsv(history) {
-    var lines = ['\uFEFF序號,獎項名稱,中獎姓名,抽獎時間'];
-    (history || []).forEach(function(rec, i){
-      lines.push([
-        sanitizeCsvCell(rec.sequence || (i + 1)),
-        sanitizeCsvCell(rec.prizeName),
-        sanitizeCsvCell(rec.winnerName),
-        sanitizeCsvCell(rec.timestamp)
-      ].join(','));
-    });
-    return lines.join('\r\n');
-  }
-
-  function downloadFile(content, name, mime) {
-    var blob = new Blob([content], { type: mime });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = name; a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
-  }
-
-  function escapeHtml(str) {
-    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
-
-  
-  (function initApp() {
-    var state = new StateManager({
-      prizes: [
-        { name: '特獎 (大獎)', totalQuota: 1 },
-        { name: '頭獎', totalQuota: 2 },
-        { name: '二獎 (普獎)', totalQuota: 5 }
-      ]
-    });
-
-    var audio = new AudioSynthesizer();
-    var confetti = new ConfettiEngine(document.getElementById('confetti-canvas'));
-    var renderEngine = new RenderEngine(
-      document.getElementById('wheel-canvas'),
-      document.getElementById('slot-machine-frame'),
-      audio
-    );
-
-    // DOM 元素快取
-    var viewSetup = document.getElementById('view-setup');
-    var viewStage = document.getElementById('view-stage');
-    var inputCandidates = document.getElementById('input-candidates');
-    var candidateBadge = document.getElementById('candidate-count-badge');
-    var prizesList = document.getElementById('prizes-list');
-    var btnAddPrize = document.getElementById('btn-add-prize');
-    var selDrawOrder = document.getElementById('config-draw-order');
-    var chkAllowDup = document.getElementById('config-allow-duplicates');
-    var chkAutoSwitch = document.getElementById('config-auto-switch');
-    var btnStartStage = document.getElementById('btn-start-stage');
-    var btnExportHtml = document.getElementById('btn-export-html');
-    var btnEmergencyEdit = document.getElementById('btn-emergency-edit');
-    var btnSpin = document.getElementById('btn-spin');
-    var stageOrderTag = document.getElementById('stage-order-tag');
-    var stagePrizeName = document.getElementById('stage-prize-name');
-    var stageQuotaRemaining = document.getElementById('stage-quota-remaining');
-    var stageCandidatesRemaining = document.getElementById('stage-candidates-remaining');
-    var stageStatusHint = document.getElementById('stage-status-hint');
-    var historyCounter = document.getElementById('history-counter');
-    var historyFeed = document.getElementById('history-feed');
-    var btnExportCsv = document.getElementById('btn-export-csv');
-    var btnResetAll = document.getElementById('btn-reset-all');
-    var winnerModal = document.getElementById('winner-modal-overlay');
-    var modalPrizeTag = document.getElementById('modal-prize-tag');
-    var modalWinnerName = document.getElementById('modal-winner-name');
-    var btnModalContinue = document.getElementById('btn-modal-continue');
-    var fileDropzone = document.getElementById('file-dropzone');
-    var fileInput = document.getElementById('file-input');
-    var btnFullscreen = document.getElementById('btn-fullscreen-toggle');
-
-    var btnLoadSample = document.getElementById('btn-load-sample');
-    var btnDedupNames = document.getElementById('btn-dedup-names');
-    var btnClearNames = document.getElementById('btn-clear-names');
-
-    // 自訂對話框 (防 iframe 阻擋)
-    var dialogOverlay = document.getElementById('dialog-modal-overlay');
-    var dialogTitle = document.getElementById('dialog-title');
-    var dialogMsg = document.getElementById('dialog-msg');
-    var dialogBtnCancel = document.getElementById('dialog-btn-cancel');
-    var dialogBtnConfirm = document.getElementById('dialog-btn-confirm');
-    var onDialogConfirmAction = null;
-
-    function openDialog(title, message, isConfirm, onConfirm) {
-      dialogTitle.textContent = title;
-      dialogMsg.textContent = message;
-      dialogBtnCancel.style.display = isConfirm ? 'inline-block' : 'none';
-      onDialogConfirmAction = onConfirm;
-      dialogOverlay.classList.add('active');
-    }
-    dialogBtnCancel.onclick = function() { dialogOverlay.classList.remove('active'); };
-    dialogBtnConfirm.onclick = function() {
-      dialogOverlay.classList.remove('active');
-      if (typeof onDialogConfirmAction === 'function') onDialogConfirmAction();
-    };
-
-    // 全螢幕切換
-    btnFullscreen.onclick = function() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(function(){});
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-      }
-    };
-
-    // 名冊快速輔助工具
-    btnLoadSample.onclick = function() {
-      var sample = "陳冠宇\n林雅婷\n黃家豪\n張庭瑄\n李宗翰\n王欣怡\n吳柏毅\n劉佳穎\n蔡宗佑\n鄭宇軒\n許雅筑\n謝政廷\n宋詩涵\n楊凱傑\n潘品妤";
-      inputCandidates.value = sample;
-      state.setInputText(sample);
-    };
-    btnDedupNames.onclick = function() {
-      var names = parseCandidateText(inputCandidates.value);
-      var unique = Array.from(new Set(names));
-      inputCandidates.value = unique.join('\n');
-      state.setInputText(inputCandidates.value);
-      openDialog('名單清理完成', '已濾除重複人名，現有名冊共 ' + unique.length + ' 人。', false);
-    };
-    btnClearNames.onclick = function() {
-      openDialog('清空確認', '確定要清空目前輸入的名單文字？', true, function() {
-        inputCandidates.value = '';
-        state.setInputText('');
-      });
-    };
-
-    // 檢查是否有 Base64 初始 Bundle
-    var bundleScript = document.getElementById('__INITIAL_BUNDLE__');
-    if (bundleScript && bundleScript.textContent.trim().length > 0) {
-      state.importBundleBase64(bundleScript.textContent.trim());
-      if (state.candidatePool.length > 0 && state.prizes.length > 0) {
-        inputCandidates.value = state.rawInputText;
-      }
-    }
-
-    // 渲染獎項卡片
-    function renderPrizeInputs() {
-      prizesList.innerHTML = '';
-      var isBottomUp = state.config.drawOrder === 'BOTTOM_UP';
-      var totalPrizes = state.prizes.length;
-
-      state.prizes.forEach(function(p, idx) {
-        var orderNum = isBottomUp ? (totalPrizes - idx) : (idx + 1);
-        var isGrand = orderNum === totalPrizes;
-        var rankClass = isGrand ? 'prize-rank-pill grand' : 'prize-rank-pill';
-        var orderLabel = isGrand ? '★ 壓軸大獎' : ('第 ' + orderNum + ' 順位');
-
-        var card = document.createElement('div');
-        card.className = 'prize-card';
-        card.innerHTML = 
-          '<div class="' + rankClass + '">' + orderLabel + '</div>' +
-          '<input type="text" value="' + escapeHtml(p.name) + '" placeholder="獎項名稱" data-id="' + p.id + '" class="p-name">' +
-          '<input type="number" min="1" value="' + p.totalQuota + '" data-id="' + p.id + '" class="p-quota" title="配額數量">' +
-          '<div class="reorder-btns">' +
-            '<button class="btn-icon btn-move-up" data-idx="' + idx + '" title="順位前移" ' + (idx === 0 ? 'disabled style="opacity:0.2"' : '') + '>▲</button>' +
-            '<button class="btn-icon btn-move-down" data-idx="' + idx + '" title="順位後移" ' + (idx === totalPrizes - 1 ? 'disabled style="opacity:0.2"' : '') + '>▼</button>' +
-          '</div>' +
-          '<button class="btn-icon del btn-del-p" data-id="' + p.id + '" title="刪除獎項">✕</button>';
-        prizesList.appendChild(card);
-      });
-      syncPrizeListeners();
-    }
-
-    function syncPrizeListeners() {
-      prizesList.querySelectorAll('.p-name').forEach(function(inp) {
-        inp.oninput = function() {
-          var id = this.getAttribute('data-id');
-          var p = state.prizes.find(function(item){ return item.id === id; });
-          if (p) { p.name = this.value; state.validate(); }
-        };
-      });
-      prizesList.querySelectorAll('.p-quota').forEach(function(inp) {
-        inp.oninput = function() {
-          var id = this.getAttribute('data-id');
-          var p = state.prizes.find(function(item){ return item.id === id; });
-          if (p) {
-            var val = Math.max(1, parseInt(this.value, 10) || 1);
-            p.totalQuota = val;
-            p.remainingQuota = val;
-            state.validate();
-          }
-        };
-      });
-      prizesList.querySelectorAll('.btn-move-up').forEach(function(btn) {
-        btn.onclick = function() {
-          var idx = parseInt(this.getAttribute('data-idx'), 10);
-          state.movePrize(idx, idx - 1);
-          renderPrizeInputs();
-        };
-      });
-      prizesList.querySelectorAll('.btn-move-down').forEach(function(btn) {
-        btn.onclick = function() {
-          var idx = parseInt(this.getAttribute('data-idx'), 10);
-          state.movePrize(idx, idx + 1);
-          renderPrizeInputs();
-        };
-      });
-      prizesList.querySelectorAll('.btn-del-p').forEach(function(btn) {
-        btn.onclick = function() {
-          var id = this.getAttribute('data-id');
-          state.removePrize(id);
-          renderPrizeInputs();
-        };
-      });
-    }
-
-    btnAddPrize.onclick = function() {
-      state.addPrize('獎項 ' + (state.prizes.length + 1), 1);
-      renderPrizeInputs();
-    };
-
-    selDrawOrder.onchange = function() {
-      state.updateConfig({ drawOrder: this.value });
-      renderPrizeInputs();
-    };
-
-    inputCandidates.oninput = function() {
-      state.setInputText(this.value);
-    };
-
-    fileDropzone.onclick = function() { fileInput.click(); };
-    fileInput.onchange = function(e) {
-      var file = e.target.files && e.target.files[0];
-      if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function(evt) {
-        var content = evt.target.result || '';
-        inputCandidates.value = content;
-        state.setInputText(content);
-      };
-      reader.readAsText(file, 'utf-8');
-    };
-
-    chkAllowDup.onchange = function() { state.updateConfig({ allowDuplicates: this.checked }); };
-    chkAutoSwitch.onchange = function() { state.updateConfig({ autoSwitchTier: this.checked }); };
-
-    btnStartStage.onclick = function() {
-      audio.init();
-      if (!state.validate()) {
-        openDialog('無法進入舞台', '請先輸入至少一位名單人員，並確保獎項配額大於 0。', false);
-        return;
-      }
-      switchToStage();
-    };
-
-    function switchToStage() {
-      viewSetup.classList.remove('active');
-      viewStage.classList.add('active');
-      btnEmergencyEdit.classList.remove('hidden');
-      renderEngine.setCandidates(state.candidatePool);
-      updateStageView();
-    }
-
-    btnEmergencyEdit.onclick = function() {
-      openDialog('返回設定頁面', '確定返回設定頁面？目前未抽出的獎項進度將完整保留。', true, function() {
-        renderEngine.stop();
-        confetti.stop();
-        winnerModal.classList.remove('active');
-        state.emergencyEdit();
-        viewStage.classList.remove('active');
-        viewSetup.classList.add('active');
-        btnEmergencyEdit.classList.add('hidden');
-      });
-    };
-
-    function updateStageView() {
-      var cur = state.getCurrentPrize();
-      var s = state.getState();
-      var ordered = state.getOrderedPrizes();
-      candidateBadge.textContent = s.candidatePool.length + ' 人登記';
-      historyCounter.textContent = s.history.length + ' 人獲獎';
-      stageCandidatesRemaining.textContent = s.candidatePool.length + ' 人';
-
-      var curIdx = -1;
-      if (cur) {
-        curIdx = ordered.findIndex(function(p){ return p.id === cur.id; });
-      }
-
-      if (cur) {
-        var roundNum = curIdx >= 0 ? (curIdx + 1) : 1;
-        var isGrand = roundNum === ordered.length;
-        stageOrderTag.textContent = '大會抽獎 ｜ 第 ' + roundNum + ' 輪 (共 ' + ordered.length + ' 輪)' + (isGrand ? ' ★ 壓軸大獎' : '');
-        stagePrizeName.textContent = cur.name;
-        stageQuotaRemaining.textContent = cur.remainingQuota + ' / ' + cur.totalQuota;
-      } else {
-        stageOrderTag.textContent = '大會抽獎全部完成';
-        stagePrizeName.textContent = '恭喜所有獲獎幸運兒';
-        stageQuotaRemaining.textContent = '全部抽滿';
-      }
-
-      btnSpin.className = 'btn-stage-spin';
-
-      if (s.status === 'READY') {
-        btnSpin.disabled = false;
-        btnSpin.textContent = '開始抽獎';
-        stageStatusHint.innerHTML = '輕按 <kbd>Space 空白鍵</kbd> 或點擊按鈕抽取';
-      } else if (s.status === 'SPINNING') {
-        btnSpin.disabled = true;
-        btnSpin.textContent = '搖獎中...';
-        stageStatusHint.textContent = '命運輪盤旋轉中，敬請全場期待...';
-      } else if (s.status === 'REVEALED') {
-        btnSpin.disabled = false;
-        btnSpin.textContent = '抽取下一位';
-      } else if (s.status === 'PARTIAL_FILLED') {
-        btnSpin.disabled = false;
-        btnSpin.className = 'btn-stage-spin btn-conclude';
-        btnSpin.textContent = '名額已空：提前結算大會';
-        stageStatusHint.textContent = '候選名冊已全數抽空！點擊按鈕圓滿結算大會，或點「返回設定」補充名冊。';
-      } else if (s.status === 'COMPLETED') {
-        btnSpin.disabled = true;
-        btnSpin.textContent = '大會圓滿落幕';
-        stageStatusHint.textContent = '恭喜所有幸運兒！可點選上方「匯出 CSV」下載中獎名單';
-      }
-
-      renderLiveFeed();
-    }
-
-    function triggerSpinAction() {
-      audio.init();
-      var s = state.status;
-      if (s === 'READY') {
-        try {
-          var pending = state.startSpin();
-          updateStageView();
-          renderEngine.spinTo(pending.winnerIndex, pending.winnerName, state.config.spinDurationMs, function() {
-            var record = state.revealWinner();
-            audio.playFanfare();
-            confetti.fire();
-            modalPrizeTag.textContent = '恭喜榮獲 ' + record.prizeName;
-            modalWinnerName.textContent = record.winnerName;
-            winnerModal.classList.add('active');
-            updateStageView();
-          });
-        } catch(err) {
-          console.warn(err);
-        }
-      } else if (s === 'REVEALED') {
-        winnerModal.classList.remove('active');
-        confetti.stop();
-        state.continueSpin();
-        renderEngine.setCandidates(state.candidatePool);
-        updateStageView();
-      } else if (s === 'PARTIAL_FILLED') {
-        state.finishDraw();
-        updateStageView();
-      }
-    }
-
-    btnSpin.onclick = triggerSpinAction;
-    btnModalContinue.onclick = function() {
-      winnerModal.classList.remove('active');
-      confetti.stop();
-      if (state.status === 'REVEALED') {
-        state.continueSpin();
-        renderEngine.setCandidates(state.candidatePool);
-        updateStageView();
-      }
-    };
-
-    window.addEventListener('keydown', function(e) {
-      if (e.code === 'Space') {
-        if (document.activeElement && (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT')) return;
-        e.preventDefault();
-        if (viewStage.classList.contains('active')) {
-          triggerSpinAction();
-        }
-      } else if (e.code === 'Escape') {
-        if (winnerModal.classList.contains('active')) {
-          winnerModal.classList.remove('active');
-          confetti.stop();
-        }
-      }
-    });
-
-    function renderLiveFeed() {
-      historyFeed.innerHTML = '';
-      if (state.history.length === 0) {
-        historyFeed.innerHTML = '<div style="color:var(--text-muted); text-align:center; margin-top:40px; font-size:0.85rem;">大會即將開獎，拭目以待</div>';
-        return;
-      }
-      state.history.slice().reverse().forEach(function(h) {
-        var item = document.createElement('div');
-        item.className = 'feed-item';
-        item.innerHTML = 
-          '<div>' +
-            '<div class="feed-tier-name">#' + h.sequence + ' ' + escapeHtml(h.prizeName) + '</div>' +
-            '<div class="feed-winner-name">' + escapeHtml(h.winnerName) + '</div>' +
-          '</div>' +
-          '<div style="font-size:0.75rem; color:var(--text-muted);">' + new Date(h.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}) + '</div>';
-        historyFeed.appendChild(item);
-      });
-    }
-
-    btnExportCsv.onclick = function() {
-      if (state.history.length === 0) {
-        openDialog('無中獎資料', '目前尚未抽出中獎者，無法匯出 CSV。', false);
-        return;
-      }
-      var csv = generateCsv(state.history);
-      downloadFile(csv, '大會中獎名單_' + new Date().toISOString().slice(0, 10) + '.csv', 'text/csv;charset=utf-8;');
-    };
-
-    btnResetAll.onclick = function() {
-      openDialog('重置確認', '確定要完整重置所有中獎紀錄並恢復初始抽獎名額？此操作不可復原。', true, function() {
-        renderEngine.stop();
-        confetti.stop();
-        winnerModal.classList.remove('active');
-        state.reset();
-        renderEngine.setCandidates(state.candidatePool);
-        updateStageView();
-      });
-    };
-
-    btnExportHtml.onclick = function() {
-      if (!state.validate()) {
-        openDialog('無法匯出', '請先輸入候選人名單與獎項配額！', false);
-        return;
-      }
-      var bundleB64 = state.exportBundleBase64();
-      var fullHtml = document.documentElement.outerHTML;
-      var bundleTag = '<script id="__INITIAL_BUNDLE__" type="text/plain">\n' + bundleB64 + '\n<\/script>';
-      var regex = /<script\s+id="__INITIAL_BUNDLE__"\s+type="text\/plain">[\s\S]*?<\/script>/i;
-      var outputHtml;
-      if (regex.test(fullHtml)) {
-        outputHtml = '<!DOCTYPE html>\n' + fullHtml.replace(regex, bundleTag);
-      } else {
-        outputHtml = '<!DOCTYPE html>\n' + fullHtml.replace('</body>', bundleTag + '\n</body>');
-      }
-      downloadFile(outputHtml, 'offline-lucky-draw-custom.html', 'text/html;charset=utf-8;');
-    };
-
-    renderPrizeInputs();
-    state.subscribe(function(ev, s) {
-      candidateBadge.textContent = s.candidatePool.length + ' 人登記';
-      btnStartStage.disabled = !state.validate();
-    });
-    btnStartStage.disabled = !state.validate();
-  })();
-  </script>
+function getSecureRandomIndex(max){if("number"!=typeof max||max<=1)return 0;var cryptoObj="undefined"!=typeof window&&window.crypto||"undefined"!=typeof globalThis&&globalThis.crypto;if(!cryptoObj||!cryptoObj.getRandomValues)throw new Error("CSPRNG unavailable");var randVal,limit=Math.floor(4294967296/max)*max,array=new Uint32Array(1);do{cryptoObj.getRandomValues(array),randVal=array[0]}while(randVal>=limit);return randVal%max}function parseCandidateText(rawText){return rawText&&"string"==typeof rawText?rawText.split(/\r?\n/).map(function(s){return s.trim()}).filter(function(s){return s.length>0}):[]}function generateId(){var arr=new Uint8Array(8),cryptoObj="undefined"!=typeof window&&window.crypto||"undefined"!=typeof globalThis&&globalThis.crypto;if(cryptoObj&&cryptoObj.getRandomValues)return cryptoObj.getRandomValues(arr),Array.from(arr).map(function(b){return b.toString(16).padStart(2,"0")}).join("");throw new Error("Crypto API required")}function StateManager(opts){if(opts=opts||{},this.eventName="string"==typeof opts.eventName&&opts.eventName.trim().length>0?opts.eventName.trim():"年度慶典抽獎大會",this.theme="string"==typeof opts.theme?opts.theme:"OBSIDIAN_GOLD",this.rawInputText="string"==typeof opts.rawInputText?opts.rawInputText:"",this.candidatePool=Array.isArray(opts.candidatePool)?opts.candidatePool.slice():parseCandidateText(this.rawInputText),this.initialCandidates=this.candidatePool.slice(),this.prizes=Array.isArray(opts.prizes)?opts.prizes.map(function(p){var t=Math.max(1,parseInt(p.totalQuota,10)||1);return{id:p.id||generateId(),name:String(p.name||"獎項"),totalQuota:t,remainingQuota:"number"==typeof p.remainingQuota?Math.max(0,parseInt(p.remainingQuota,10)):t}}):[],this.config={allowDuplicates:Boolean(opts.config&&opts.config.allowDuplicates),maxWinLimit:opts.config&&"number"==typeof opts.config.maxWinLimit?Math.max(1,parseInt(opts.config.maxWinLimit,10)):0,autoSwitchTier:!opts.config||"boolean"!=typeof opts.config.autoSwitchTier||opts.config.autoSwitchTier,drawOrder:opts.config&&opts.config.drawOrder?opts.config.drawOrder:"BOTTOM_UP",currentPrizeId:opts.config&&opts.config.currentPrizeId?opts.config.currentPrizeId:"",spinDurationMs:opts.config&&"number"==typeof opts.config.spinDurationMs?opts.config.spinDurationMs:4e3},this.winCounts=opts.winCounts&&"object"==typeof opts.winCounts?Object.assign({},opts.winCounts):{},this.ANIMATION_MODES=["WINDOWED_WHEEL","LOTTO_EGG","SLOT_MACHINE","SPLIT_FLAP","HYPERSPACE"],this.prizeModeMap={},this._scheduleAnimationModes(),!this.config.currentPrizeId&&this.prizes.length>0){var ord=this.getOrderedPrizes();ord.length>0&&(this.config.currentPrizeId=ord[0].id)}this.history=Array.isArray(opts.history)?opts.history.slice():[],this.status=opts.status||"SETUP",this._pendingSpin=null,this._listeners=[]}function AudioSynthesizer(){this.ctx=null,this.enabled=!0}StateManager.prototype.subscribe=function(fn){this._listeners.push(fn);var self=this;return function(){self._listeners=self._listeners.filter(function(l){return l!==fn})}},StateManager.prototype._notify=function(event,data){var s=this.getState();this._listeners.forEach(function(l){try{l(event,s,data)}catch(e){}})},StateManager.prototype.getState=function(){return{eventName:this.eventName,theme:this.theme,rawInputText:this.rawInputText,candidatePool:this.candidatePool.slice(),initialCandidates:this.initialCandidates.slice(),prizes:this.prizes.map(function(p){return Object.assign({},p)}),config:Object.assign({},this.config),history:this.history.map(function(h){return Object.assign({},h)}),status:this.status,winCounts:Object.assign({},this.winCounts),currentMode:this.getModeForCurrentPrize(),pendingSpin:this._pendingSpin?Object.assign({},this._pendingSpin):null}},StateManager.prototype.setEventName=function(name){this.eventName=String(name||"").trim()||"年度慶典抽獎大會",this._notify("EVENT_NAME_CHANGED",this.eventName)},StateManager.prototype.setTheme=function(theme){this.theme=String(theme||"OBSIDIAN_GOLD"),this._notify("THEME_CHANGED",this.theme)},StateManager.prototype.setInputText=function(text){this.rawInputText=String(text||""),this.candidatePool=parseCandidateText(this.rawInputText),this.initialCandidates=this.candidatePool.slice(),this.validate(),this._notify("INPUT_CHANGED")},StateManager.prototype.getOrderedPrizes=function(){var list=this.prizes.slice();return"BOTTOM_UP"===this.config.drawOrder?list.reverse():list},StateManager.prototype.movePrize=function(fromIndex,toIndex){if(!(fromIndex<0||fromIndex>=this.prizes.length||toIndex<0||toIndex>=this.prizes.length)){var item=this.prizes.splice(fromIndex,1)[0];this.prizes.splice(toIndex,0,item);var cur=this.getCurrentPrize();cur&&(this.config.currentPrizeId=cur.id),this._scheduleAnimationModes(),this.validate(),this._notify("PRIZES_CHANGED")}},StateManager.prototype.setPrizes=function(prizes){if(Array.isArray(prizes)){this.prizes=prizes.map(function(p){var t=Math.max(1,parseInt(p.totalQuota,10)||1);return{id:p.id||generateId(),name:String(p.name||"獎項"),totalQuota:t,remainingQuota:"number"==typeof p.remainingQuota?Math.max(0,parseInt(p.remainingQuota,10)):t}});var firstAvail=this.getOrderedPrizes().find(function(p){return p.remainingQuota>0});this.config.currentPrizeId=firstAvail?firstAvail.id:this.prizes[0]?this.prizes[0].id:"",this._scheduleAnimationModes(),this.validate(),this._notify("PRIZES_CHANGED")}},StateManager.prototype.addPrize=function(name,quota){var total=Math.max(1,parseInt(quota,10)||1),prize={id:generateId(),name:String(name||"新獎項"),totalQuota:total,remainingQuota:total};this.prizes.push(prize);var firstAvail=this.getOrderedPrizes().find(function(p){return p.remainingQuota>0});return firstAvail&&(this.config.currentPrizeId=firstAvail.id),this._scheduleAnimationModes(),this.validate(),this._notify("PRIZE_ADDED",prize),prize},StateManager.prototype.removePrize=function(id){this.prizes=this.prizes.filter(function(p){return p.id!==id});var firstAvail=this.getOrderedPrizes().find(function(p){return p.remainingQuota>0});this.config.currentPrizeId=firstAvail?firstAvail.id:"",this._scheduleAnimationModes(),this.validate(),this._notify("PRIZE_REMOVED",id)},StateManager.prototype._scheduleAnimationModes=function(){for(var modes=this.ANIMATION_MODES.slice(),i=modes.length-1;i>0;i--){var j=getSecureRandomIndex(i+1),tmp=modes[i];modes[i]=modes[j],modes[j]=tmp}var ordered=this.getOrderedPrizes();this.prizeModeMap={};for(var k=0;k<ordered.length;k++)this.prizeModeMap[ordered[k].id]=modes[k%modes.length]},StateManager.prototype.getModeForCurrentPrize=function(){var cur=this.getCurrentPrize();return cur?(this.prizeModeMap[cur.id]||this._scheduleAnimationModes(),this.prizeModeMap[cur.id]||this.ANIMATION_MODES[0]):this.ANIMATION_MODES[0]},StateManager.prototype.updateConfig=function(cfg){if(cfg){if("boolean"==typeof cfg.allowDuplicates&&(this.config.allowDuplicates=cfg.allowDuplicates),"number"==typeof cfg.maxWinLimit&&(this.config.maxWinLimit=Math.max(0,parseInt(cfg.maxWinLimit,10)||0)),"boolean"==typeof cfg.autoSwitchTier&&(this.config.autoSwitchTier=cfg.autoSwitchTier),"BOTTOM_UP"===cfg.drawOrder||"TOP_DOWN"===cfg.drawOrder){this.config.drawOrder=cfg.drawOrder;var cur=this.getCurrentPrize();cur&&(this.config.currentPrizeId=cur.id),this._scheduleAnimationModes()}"string"==typeof cfg.currentPrizeId&&(this.config.currentPrizeId=cfg.currentPrizeId),"number"==typeof cfg.spinDurationMs&&(this.config.spinDurationMs=cfg.spinDurationMs),this.validate(),this._notify("CONFIG_UPDATED")}},StateManager.prototype.validate=function(){if("SPINNING"===this.status)return!1;var hasCan=this.candidatePool.length>=1,totalRem=this.prizes.reduce(function(sum,p){return sum+p.remainingQuota},0);return hasCan&&totalRem>0&&this.prizes.length>=1?("SETUP"!==this.status&&"PARTIAL_FILLED"!==this.status||(this.status="READY"),!0):("READY"===this.status&&(this.status="SETUP"),!1)},StateManager.prototype.getCurrentPrize=function(){var id=this.config.currentPrizeId,p=this.prizes.find(function(item){return item.id===id});if((!p||p.remainingQuota<=0)&&this.prizes.length>0){var ord=this.getOrderedPrizes();(p=ord.find(function(item){return item.remainingQuota>0})||ord[0])&&(this.config.currentPrizeId=p.id)}return p||null},StateManager.prototype.startSpin=function(){if("READY"!==this.status)throw new Error("Not ready");var prize=this.getCurrentPrize();if(!prize||prize.remainingQuota<=0)throw new Error("No quota");if(0===this.candidatePool.length)throw this.status="PARTIAL_FILLED",this._notify("POOL_DEPLETED"),new Error("Pool empty");var winnerIndex=getSecureRandomIndex(this.candidatePool.length),winnerName=this.candidatePool[winnerIndex];return this.status="SPINNING",this._pendingSpin={winnerIndex:winnerIndex,winnerName:winnerName,prizeId:prize.id,prizeName:prize.name,mode:this.getModeForCurrentPrize()},this._notify("SPIN_STARTED",this._pendingSpin),this._pendingSpin},StateManager.prototype.revealWinner=function(){if("SPINNING"!==this.status||!this._pendingSpin)throw new Error("Not spinning");var pending=this._pendingSpin,prize=this.prizes.find(function(p){return p.id===pending.prizeId});prize&&prize.remainingQuota>0&&(prize.remainingQuota-=1);var winner=pending.winnerName,count=(this.winCounts[winner]||0)+1;if(this.winCounts[winner]=count,this.config.allowDuplicates){if(this.config.maxWinLimit&&count>=this.config.maxWinLimit){var idx2=this.candidatePool.indexOf(winner);-1!==idx2&&this.candidatePool.splice(idx2,1)}}else{var idx=this.candidatePool.indexOf(winner);-1!==idx&&this.candidatePool.splice(idx,1)}var record={sequence:this.history.length+1,prizeName:pending.prizeName,winnerName:pending.winnerName,timestamp:(new Date).toISOString()};return this.history.push(record),this.status="REVEALED",this._pendingSpin=null,this._notify("WINNER_REVEALED",record),record},StateManager.prototype.continueSpin=function(){if("REVEALED"!==this.status)throw new Error("Not revealed");var cur=this.getCurrentPrize();if(cur&&cur.remainingQuota<=0&&this.config.autoSwitchTier){var next=this.getOrderedPrizes().find(function(p){return p.remainingQuota>0});next&&(this.config.currentPrizeId=next.id,cur=next)}return this.prizes.reduce(function(sum,p){return sum+p.remainingQuota},0)<=0?(this.status="COMPLETED",this._notify("ALL_QUOTA_FILLED"),this.status):0===this.candidatePool.length?(this.status="PARTIAL_FILLED",this._notify("POOL_DEPLETED"),this.status):(this.status="READY",this._notify("READY_FOR_NEXT"),this.status)},StateManager.prototype.finishDraw=function(){return this._pendingSpin=null,this.status="COMPLETED",this._notify("ALL_QUOTA_FILLED"),this.status},StateManager.prototype.emergencyEdit=function(){this._pendingSpin=null,this.status="SETUP",this._notify("EMERGENCY_EDIT")},StateManager.prototype.reset=function(){this._pendingSpin=null,this.history=[],this.winCounts={},this.candidatePool=this.initialCandidates.slice(),this.prizes.forEach(function(p){p.remainingQuota=p.totalQuota}),this._scheduleAnimationModes();var ord=this.getOrderedPrizes();ord.length>0&&(this.config.currentPrizeId=ord[0].id),this.status="SETUP",this.validate(),this._notify("RESET_COMPLETED")},StateManager.prototype.exportBundleBase64=function(){var bundle={eventName:this.eventName,theme:this.theme,rawInputText:this.rawInputText,candidatePool:this.candidatePool,prizes:this.prizes,config:this.config,history:this.history,winCounts:this.winCounts,exportedAt:(new Date).toISOString()};return btoa(unescape(encodeURIComponent(JSON.stringify(bundle))))},StateManager.prototype.importBundleBase64=function(b64){if(!b64||"string"!=typeof b64)return!1;try{var json=decodeURIComponent(escape(atob(b64.trim()))),bundle=JSON.parse(json);if(bundle&&"object"==typeof bundle)return"string"==typeof bundle.eventName&&(this.eventName=bundle.eventName),"string"==typeof bundle.theme&&(this.theme=bundle.theme),"string"==typeof bundle.rawInputText&&(this.rawInputText=bundle.rawInputText),Array.isArray(bundle.candidatePool)&&(this.candidatePool=bundle.candidatePool.slice(),this.initialCandidates=bundle.candidatePool.slice()),Array.isArray(bundle.prizes)&&this.setPrizes(bundle.prizes),bundle.config&&this.updateConfig(bundle.config),Array.isArray(bundle.history)&&(this.history=bundle.history.slice()),bundle.winCounts&&"object"==typeof bundle.winCounts&&(this.winCounts=Object.assign({},bundle.winCounts)),this._scheduleAnimationModes(),this.status="SETUP",this.validate(),!0}catch(e){}return!1},AudioSynthesizer.prototype.init=function(){if(this.ctx)"suspended"===this.ctx.state&&this.ctx.resume().catch(function(){});else try{var Cls=window.AudioContext||window.webkitAudioContext;Cls&&(this.ctx=new Cls)}catch(e){this.enabled=!1}},AudioSynthesizer.prototype.playTick=function(){if(this.enabled&&(this.init(),this.ctx))try{var now=this.ctx.currentTime,osc=this.ctx.createOscillator(),gain=this.ctx.createGain();osc.type="triangle",osc.frequency.setValueAtTime(650,now),osc.frequency.exponentialRampToValueAtTime(140,now+.035),gain.gain.setValueAtTime(.25,now),gain.gain.exponentialRampToValueAtTime(.001,now+.035),osc.connect(gain),gain.connect(this.ctx.destination),osc.start(now),osc.stop(now+.04)}catch(e){}},AudioSynthesizer.prototype.playPop=function(){if(this.enabled&&(this.init(),this.ctx))try{var now=this.ctx.currentTime,osc=this.ctx.createOscillator(),gain=this.ctx.createGain();osc.type="sine",osc.frequency.setValueAtTime(280,now),osc.frequency.exponentialRampToValueAtTime(800,now+.06),gain.gain.setValueAtTime(.35,now),gain.gain.exponentialRampToValueAtTime(.001,now+.08),osc.connect(gain),gain.connect(this.ctx.destination),osc.start(now),osc.stop(now+.09)}catch(e){}},AudioSynthesizer.prototype.playFlap=function(){if(this.enabled&&(this.init(),this.ctx))try{var now=this.ctx.currentTime,osc=this.ctx.createOscillator(),gain=this.ctx.createGain();osc.type="square",osc.frequency.setValueAtTime(450,now),osc.frequency.exponentialRampToValueAtTime(100,now+.02),gain.gain.setValueAtTime(.18,now),gain.gain.exponentialRampToValueAtTime(.001,now+.025),osc.connect(gain),gain.connect(this.ctx.destination),osc.start(now),osc.stop(now+.03)}catch(e){}},AudioSynthesizer.prototype.playWarp=function(){if(this.enabled&&(this.init(),this.ctx))try{var now=this.ctx.currentTime,osc=this.ctx.createOscillator(),gain=this.ctx.createGain();osc.type="sawtooth",osc.frequency.setValueAtTime(160,now),osc.frequency.exponentialRampToValueAtTime(900,now+.25),gain.gain.setValueAtTime(.12,now),gain.gain.exponentialRampToValueAtTime(.001,now+.3),osc.connect(gain),gain.connect(this.ctx.destination),osc.start(now),osc.stop(now+.35)}catch(e){}},AudioSynthesizer.prototype.playFanfare=function(){if(this.enabled&&(this.init(),this.ctx))try{var self=this,base=this.ctx.currentTime;[{f:523.25,t:0,d:.35},{f:659.25,t:.1,d:.35},{f:783.99,t:.2,d:.45},{f:1046.5,t:.32,d:1.1}].forEach(function(n){var osc=self.ctx.createOscillator(),gain=self.ctx.createGain();osc.type="sine",osc.frequency.setValueAtTime(n.f,base+n.t),gain.gain.setValueAtTime(.001,base+n.t),gain.gain.linearRampToValueAtTime(.3,base+n.t+.03),gain.gain.exponentialRampToValueAtTime(.001,base+n.t+n.d),osc.connect(gain),gain.connect(self.ctx.destination),osc.start(base+n.t),osc.stop(base+n.t+n.d)})}catch(e){}};var CONF_COLORS=["#d4af37","#f3e5ab","#c53030","#e53e3e","#38bdf8","#10b981","#fb923c","#ffffff"];function ConfettiEngine(cvs){this.canvas=cvs,this.ctx=cvs?cvs.getContext("2d"):null,this.particles=[],this.animId=null,this.active=!1}function easeOutQuint(t){return 1+--t*t*t*t*t}function MasterVisualEngine(canvas,audio){this.canvas=canvas,this.ctx=canvas?canvas.getContext("2d"):null,this.audio=audio,this.candidates=[],this.currentMode="WINDOWED_WHEEL",this.animId=null,this.isSpinning=!1,this.lottoBalls=[],this.stars=[]}function sanitizeCsvCell(v){if(null==v)return'""';var s=String(v);return/^[=+\-@]/.test(s)&&(s="'"+s),/[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':'"'+s+'"'}function generateCsv(history){var lines=["\uFEFF序號,獎項名稱,中獎姓名,抽獎時間"];return(history||[]).forEach(function(rec,i){lines.push([sanitizeCsvCell(rec.sequence||i+1),sanitizeCsvCell(rec.prizeName),sanitizeCsvCell(rec.winnerName),sanitizeCsvCell(rec.timestamp)].join(","))}),lines.join("\r\n")}function downloadFile(content,name,mime){var blob=new Blob([content],{type:mime}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url,a.download=name,a.style.display="none",document.body.appendChild(a),a.click(),setTimeout(function(){document.body.removeChild(a),URL.revokeObjectURL(url)},100)}function escapeHtml(str){return String(str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}ConfettiEngine.prototype.resize=function(){this.canvas&&(this.canvas.width=window.innerWidth,this.canvas.height=window.innerHeight)},ConfettiEngine.prototype.fire=function(){this.stop(),this.resize();for(var w=this.canvas.width,h=this.canvas.height,i=0;i<150;i++){var angle=2*Math.PI*Math.random(),speed=8+16*Math.random();this.particles.push({x:.5*w+60*(Math.random()-.5),y:.42*h+60*(Math.random()-.5),vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-7,size:7+7*Math.random(),color:CONF_COLORS[Math.floor(Math.random()*CONF_COLORS.length)],rotation:360*Math.random(),rotSpeed:12*(Math.random()-.5),alpha:1,decay:.006+.006*Math.random()})}this.active=!0;var self=this;this.animId=requestAnimationFrame(function loop(){if(self.active){var ctx=self.ctx;ctx.clearRect(0,0,self.canvas.width,self.canvas.height);for(var i=self.particles.length-1;i>=0;i--){var p=self.particles[i];p.x+=p.vx,p.y+=p.vy,p.vy+=.35,p.vx*=.985,p.vy*=.985,p.rotation+=p.rotSpeed,p.alpha-=p.decay,p.alpha<=0||p.y>self.canvas.height+40?self.particles.splice(i,1):(ctx.save(),ctx.translate(p.x,p.y),ctx.rotate(p.rotation*Math.PI/180),ctx.globalAlpha=Math.max(0,p.alpha),ctx.fillStyle=p.color,ctx.fillRect(-p.size/2,-p.size/2,p.size,.6*p.size),ctx.restore())}self.particles.length>0?self.animId=requestAnimationFrame(loop):self.stop()}})},ConfettiEngine.prototype.stop=function(){this.active=!1,this.animId&&(cancelAnimationFrame(this.animId),this.animId=null),this.particles=[],this.ctx&&this.canvas&&this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)},MasterVisualEngine.prototype.setCandidates=function(list){this.candidates=Array.isArray(list)?list.slice():[]},MasterVisualEngine.prototype.setMode=function(mode){this.currentMode=mode||"WINDOWED_WHEEL",this.renderStatic()},MasterVisualEngine.prototype.renderStatic=function(){if(this.canvas&&this.ctx){var ctx=this.ctx,w=this.canvas.width,h=this.canvas.height;ctx.clearRect(0,0,w,h),"WINDOWED_WHEEL"===this.currentMode?this._drawWheelStatic():"LOTTO_EGG"===this.currentMode?this._drawLottoStatic():"SLOT_MACHINE"===this.currentMode?this._drawSlotStatic():"SPLIT_FLAP"===this.currentMode?this._drawFlapStatic():"HYPERSPACE"===this.currentMode&&this._drawHyperspaceStatic()}},MasterVisualEngine.prototype._drawWheelStatic=function(angle,zoomFactor,highlightName){var ctx=this.ctx,w=this.canvas.width,h=this.canvas.height;ctx.clearRect(0,0,w,h);var cx=w/2,cy=h/2,r=175;angle=angle||0,zoomFactor=zoomFactor||1,ctx.save(),zoomFactor>1&&(ctx.translate(cx,cy),ctx.scale(zoomFactor,zoomFactor),ctx.translate(-cx,-cy)),ctx.beginPath(),ctx.arc(cx,cy,183,0,2*Math.PI),ctx.fillStyle="#1e2129",ctx.fill(),ctx.lineWidth=4,ctx.strokeStyle="#d4af37",ctx.stroke();for(var sliceAngle=2*Math.PI/12,palette=["#8b1e1e","#1c3d5a","#1a4731","#744210","#975a16","#2d3748"],i=0;i<12;i++){var s=angle+i*sliceAngle,e=s+sliceAngle;ctx.beginPath(),ctx.moveTo(cx,cy),ctx.arc(cx,cy,r,s,e),ctx.closePath(),ctx.fillStyle=palette[i%palette.length],ctx.fill(),ctx.lineWidth=1.5,ctx.strokeStyle="rgba(212, 175, 55, 0.4)",ctx.stroke(),ctx.save(),ctx.translate(cx,cy),ctx.rotate(s+sliceAngle/2),ctx.textAlign="right",ctx.textBaseline="middle",ctx.fillStyle="#f4f4f5",ctx.font="bold 15px sans-serif";var displayName=highlightName&&9===i?highlightName:this.candidates[i%this.candidates.length]||"...";displayName.length>6&&(displayName=displayName.substring(0,5)+"…"),ctx.fillText(displayName,153,0),ctx.restore()}ctx.beginPath(),ctx.arc(cx,cy,26,0,2*Math.PI),ctx.fillStyle="#d4af37",ctx.fill(),ctx.lineWidth=2,ctx.strokeStyle="#fff",ctx.stroke(),ctx.beginPath(),ctx.moveTo(cx,cy-r+16),ctx.lineTo(cx-14,cy-r-14),ctx.lineTo(cx+14,cy-r-14),ctx.closePath(),ctx.fillStyle="#d4af37",ctx.fill(),ctx.lineWidth=2,ctx.strokeStyle="#fff",ctx.stroke(),ctx.restore()},MasterVisualEngine.prototype._initLottoBalls=function(){this.lottoBalls=[];for(var colors=["#f59e0b","#ef4444","#10b981","#3b82f6","#8b5cf6","#ec4899","#f3e5ab"],i=0;i<28;i++)this.lottoBalls.push({x:260+160*(Math.random()-.5),y:200+140*(Math.random()-.5),vx:12*(Math.random()-.5),vy:12*(Math.random()-.5),r:12+4*Math.random(),color:colors[i%colors.length]})},MasterVisualEngine.prototype._drawLottoStatic=function(){var ctx=this.ctx,w=this.canvas.width,h=this.canvas.height;ctx.clearRect(0,0,w,h);var cx=w/2,r=135;ctx.beginPath(),ctx.arc(cx,190,r,0,2*Math.PI),ctx.fillStyle="rgba(255, 255, 255, 0.04)",ctx.fill(),ctx.lineWidth=4,ctx.strokeStyle="#d4af37",ctx.stroke(),ctx.beginPath(),ctx.moveTo(cx-50,315),ctx.lineTo(cx-30,370),ctx.lineTo(cx+30,370),ctx.lineTo(cx+50,315),ctx.closePath(),ctx.fillStyle="#1e2129",ctx.fill(),ctx.lineWidth=2,ctx.strokeStyle="#d4af37",ctx.stroke(),ctx.beginPath(),ctx.ellipse(cx,385,22,28,0,0,2*Math.PI),ctx.fillStyle="linear-gradient(to bottom, #f3e5ab, #d4af37)",ctx.fillStyle="#d4af37",ctx.fill(),ctx.lineWidth=2,ctx.strokeStyle="#fff",ctx.stroke(),ctx.fillStyle="#f4f4f5",ctx.font="bold 16px sans-serif",ctx.textAlign="center",ctx.fillText("樂透氣壓彩蛋機 ｜ 靜候開獎",cx,h-14)},MasterVisualEngine.prototype._drawSlotStatic=function(name){var ctx=this.ctx,w=this.canvas.width,h=this.canvas.height;ctx.clearRect(0,0,w,h);var x=(w-420)/2,y=(h-180)/2;ctx.fillStyle="#0d0e12",ctx.strokeStyle="#d4af37",ctx.lineWidth=3,ctx.beginPath(),ctx.roundRect(x,y,420,180,16),ctx.fill(),ctx.stroke(),ctx.fillStyle="#d4af37",ctx.font="bold 36px sans-serif",ctx.textAlign="center",ctx.textBaseline="middle",ctx.fillText(name||this.candidates[0]||"準備抽獎",w/2,h/2),ctx.fillStyle="rgba(212, 175, 55, 0.7)",ctx.font="14px sans-serif",ctx.fillText("復古機械滾輪 ｜ 3D 跑馬燈",w/2,h-24)},MasterVisualEngine.prototype._drawFlapStatic=function(text){var ctx=this.ctx,w=this.canvas.width,h=this.canvas.height;ctx.clearRect(0,0,w,h);for(var chars=String(text||this.candidates[0]||"幸運開獎").split(""),startX=(w-(54*chars.length+8*(chars.length-1)))/2,y=(h-75)/2,i=0;i<chars.length;i++){var cx=startX+62*i;ctx.fillStyle="#181a20",ctx.strokeStyle="#d4af37",ctx.lineWidth=2,ctx.beginPath(),ctx.roundRect(cx,y,54,75,6),ctx.fill(),ctx.stroke(),ctx.beginPath(),ctx.moveTo(cx,y+37.5),ctx.lineTo(cx+54,y+37.5),ctx.strokeStyle="#000",ctx.lineWidth=2,ctx.stroke(),ctx.fillStyle="#fff",ctx.font="bold 34px monospace",ctx.textAlign="center",ctx.textBaseline="middle",ctx.fillText(chars[i],cx+27,y+37.5)}ctx.fillStyle="rgba(212, 175, 55, 0.7)",ctx.font="14px sans-serif",ctx.textAlign="center",ctx.fillText("好萊塢機械翻牌告示板",w/2,h-24)},MasterVisualEngine.prototype._initStars=function(){this.stars=[];for(var i=0;i<70;i++)this.stars.push({x:520*(Math.random()-.5),y:420*(Math.random()-.5),z:520*Math.random(),name:this.candidates[i%this.candidates.length]})},MasterVisualEngine.prototype._drawHyperspaceStatic=function(targetName){var ctx=this.ctx,w=this.canvas.width,h=this.canvas.height;ctx.clearRect(0,0,w,h),ctx.fillStyle="#08090d",ctx.fillRect(0,0,w,h),ctx.fillStyle="#d4af37",ctx.beginPath(),ctx.arc(w/2,h/2,4,0,2*Math.PI),ctx.fill(),ctx.fillStyle="#fff",ctx.font="bold 32px sans-serif",ctx.textAlign="center",ctx.textBaseline="middle",ctx.fillText(targetName||"星際光速穿梭 ｜ 蓄勢待發",w/2,h/2)},MasterVisualEngine.prototype.spinTo=function(mode,targetIndex,targetName,durationMs,onDone){this.stop(),this.isSpinning=!0,this.currentMode=mode;var self=this;if(durationMs=durationMs||4e3,"WINDOWED_WHEEL"===mode){var startTime=performance.now(),extraRounds=6*Math.PI*2,lastTick=0;this.animId=requestAnimationFrame(function stepWheel(now){if(self.isSpinning){var p=Math.min(1,(now-startTime)/durationMs),eased=easeOutQuint(p),curAngle=extraRounds*eased;now-lastTick>40+200*p&&(lastTick=now,self.audio&&self.audio.playTick());var zoom=p>.85?1+2.5*(p-.85):1;self._drawWheelStatic(curAngle,zoom,targetName),p<1?self.animId=requestAnimationFrame(stepWheel):(self.isSpinning=!1,onDone&&onDone())}})}else if("LOTTO_EGG"===mode){this._initLottoBalls();var t0=performance.now(),eggOut=!1;this.animId=requestAnimationFrame(function stepLotto(now){if(self.isSpinning){var p=Math.min(1,(now-t0)/durationMs),ctx=self.ctx,w=self.canvas.width,h=self.canvas.height;ctx.clearRect(0,0,w,h);var cx=w/2;ctx.beginPath(),ctx.arc(cx,180,125,0,2*Math.PI),ctx.fillStyle="rgba(255, 255, 255, 0.05)",ctx.fill(),ctx.lineWidth=4,ctx.strokeStyle="#d4af37",ctx.stroke();for(var speedScale=1.8*(1-easeOutQuint(p))+.2,i=0;i<self.lottoBalls.length;i++){var b=self.lottoBalls[i];if(b.x+=b.vx*speedScale,b.y+=b.vy*speedScale,Math.hypot(b.x-cx,b.y-180)>125-b.r){var angle=Math.atan2(b.y-180,b.x-cx);b.vx=-Math.cos(angle)*(6+4*Math.random()),b.vy=-Math.sin(angle)*(6+4*Math.random())}ctx.beginPath(),ctx.arc(b.x,b.y,b.r,0,2*Math.PI),ctx.fillStyle=b.color,ctx.fill()}if(p>.65){eggOut||(eggOut=!0,self.audio&&self.audio.playPop());var eggProg=(p-.65)/.35,eggY=180+(h/2-180)*easeOutQuint(eggProg),eggScale=1+.8*eggProg;ctx.save(),ctx.translate(cx,eggY),ctx.scale(eggScale,eggScale),ctx.beginPath(),ctx.ellipse(0,0,32,42,0,0,2*Math.PI),ctx.fillStyle="#d4af37",ctx.fill(),ctx.lineWidth=2,ctx.strokeStyle="#fff",ctx.stroke(),ctx.restore(),eggProg>.85&&(ctx.fillStyle="#fff",ctx.font="bold 36px sans-serif",ctx.textAlign="center",ctx.fillText(targetName,cx,h/2-50))}p<1?self.animId=requestAnimationFrame(stepLotto):(self.isSpinning=!1,onDone&&onDone())}})}else if("SLOT_MACHINE"===mode){var tStart=performance.now(),lastRoll=0;this.animId=requestAnimationFrame(function stepSlot(now){if(self.isSpinning){var p=Math.min(1,(now-tStart)/durationMs);if(now-lastRoll>40+220*(1-(1-easeOutQuint(p)))){lastRoll=now;var rand=self.candidates[Math.floor(Math.random()*self.candidates.length)]||"...";self._drawSlotStatic(p>.95?targetName:rand),self.audio&&self.audio.playTick()}p<1?self.animId=requestAnimationFrame(stepSlot):(self.isSpinning=!1,self._drawSlotStatic(targetName),onDone&&onDone())}})}else if("SPLIT_FLAP"===mode){var tF=performance.now(),lastFlap=0,alphabet="陳林黃張李王吳劉蔡鄭許謝宋楊潘ABCDEF0123456789";this.animId=requestAnimationFrame(function stepFlap(now){if(self.isSpinning){var p=Math.min(1,(now-tF)/durationMs);if(now-lastFlap>45+180*p){lastFlap=now,self.audio&&self.audio.playFlap();for(var targetChars=targetName.split(""),curStr="",i=0;i<targetChars.length;i++)p>(i+1)/(targetChars.length+1)?curStr+=targetChars[i]:curStr+=alphabet[Math.floor(31*Math.random())];self._drawFlapStatic(curStr)}p<1?self.animId=requestAnimationFrame(stepFlap):(self.isSpinning=!1,self._drawFlapStatic(targetName),onDone&&onDone())}})}else if("HYPERSPACE"===mode){this._initStars();var tH=performance.now();self.audio&&self.audio.playWarp(),this.animId=requestAnimationFrame(function stepWarp(now){if(self.isSpinning){var p=Math.min(1,(now-tH)/durationMs),ctx=self.ctx,w=self.canvas.width,h=self.canvas.height;ctx.fillStyle="rgba(8, 9, 13, 0.25)",ctx.fillRect(0,0,w,h);for(var cx=w/2,cy=h/2,warpSpeed=25*(1-easeOutQuint(p))+2,i=0;i<self.stars.length;i++){var s=self.stars[i];s.z-=warpSpeed,s.z<=0&&(s.z=520,s.x=520*(Math.random()-.5),s.y=420*(Math.random()-.5));var k=220/s.z,px=s.x*k+cx,py=s.y*k+cy;px>0&&px<w&&py>0&&py<h&&(ctx.beginPath(),ctx.arc(px,py,Math.max(1,3*(1-s.z/520)),0,2*Math.PI),ctx.fillStyle="#d4af37",ctx.fill())}p>.85&&(ctx.fillStyle="#fff",ctx.font="bold 40px sans-serif",ctx.textAlign="center",ctx.textBaseline="middle",ctx.fillText(targetName,cx,cy)),p<1?self.animId=requestAnimationFrame(stepWarp):(self.isSpinning=!1,self._drawHyperspaceStatic(targetName),onDone&&onDone())}})}},MasterVisualEngine.prototype.stop=function(){this.isSpinning=!1,this.animId&&(cancelAnimationFrame(this.animId),this.animId=null)},function(){var state=new StateManager({eventName:"年度慶典抽獎大會",prizes:[{name:"特獎 (大獎)",totalQuota:1},{name:"頭獎",totalQuota:2},{name:"二獎 (普獎)",totalQuota:5}]}),audio=new AudioSynthesizer,confetti=new ConfettiEngine(document.getElementById("confetti-canvas")),visualEngine=new MasterVisualEngine(document.getElementById("stage-canvas"),audio),viewSetup=document.getElementById("view-setup"),viewStage=document.getElementById("view-stage"),inputCandidates=document.getElementById("input-candidates"),candidateBadge=document.getElementById("candidate-count-badge"),prizesList=document.getElementById("prizes-list"),btnAddPrize=document.getElementById("btn-add-prize"),selDrawOrder=document.getElementById("config-draw-order"),chkAllowDup=document.getElementById("config-allow-duplicates"),inpMaxWinLimit=document.getElementById("config-max-win-limit"),maxWinBox=document.getElementById("max-win-container"),chkAutoSwitch=document.getElementById("config-auto-switch"),inputEventName=document.getElementById("input-event-name"),headerBrandTitle=document.getElementById("header-brand-title"),themeSelector=document.getElementById("theme-selector"),btnStartStage=document.getElementById("btn-start-stage"),btnExportHtml=document.getElementById("btn-export-html"),btnEmergencyEdit=document.getElementById("btn-emergency-edit"),btnSpin=document.getElementById("btn-spin"),stageOrderTag=document.getElementById("stage-order-tag"),stagePrizeName=document.getElementById("stage-prize-name"),stageQuotaRemaining=document.getElementById("stage-quota-remaining"),stageCandidatesRemaining=document.getElementById("stage-candidates-remaining"),stageStatusHint=document.getElementById("stage-status-hint"),historyCounter=document.getElementById("history-counter"),historyFeed=document.getElementById("history-feed"),btnExportCsv=document.getElementById("btn-export-csv"),btnResetAll=document.getElementById("btn-reset-all"),winnerModal=document.getElementById("winner-modal-overlay"),modalPrizeTag=document.getElementById("modal-prize-tag"),modalWinnerName=document.getElementById("modal-winner-name"),btnModalContinue=document.getElementById("btn-modal-continue"),fileDropzone=document.getElementById("file-dropzone"),fileInput=document.getElementById("file-input"),btnFullscreen=document.getElementById("btn-fullscreen-toggle"),stageModeIndicator=document.getElementById("stage-mode-indicator"),btnLoadSample=document.getElementById("btn-load-sample"),btnDedupNames=document.getElementById("btn-dedup-names"),btnClearNames=document.getElementById("btn-clear-names"),dialogOverlay=document.getElementById("dialog-modal-overlay"),dialogTitle=document.getElementById("dialog-title"),dialogMsg=document.getElementById("dialog-msg"),dialogBtnCancel=document.getElementById("dialog-btn-cancel"),dialogBtnConfirm=document.getElementById("dialog-btn-confirm"),onDialogConfirmAction=null;function openDialog(title,message,isConfirm,onConfirm){dialogTitle.textContent=title,dialogMsg.textContent=message,dialogBtnCancel.style.display=isConfirm?"inline-block":"none",onDialogConfirmAction=onConfirm,dialogOverlay.classList.add("active")}dialogBtnCancel.onclick=function(){dialogOverlay.classList.remove("active")},dialogBtnConfirm.onclick=function(){dialogOverlay.classList.remove("active"),"function"==typeof onDialogConfirmAction&&onDialogConfirmAction()},btnFullscreen.onclick=function(){document.fullscreenElement?document.exitFullscreen&&document.exitFullscreen():document.documentElement.requestFullscreen().catch(function(){})},themeSelector.onchange=function(){document.body.setAttribute("data-theme",this.value),state.setTheme(this.value)},inputEventName.oninput=function(){var val=this.value.trim()||"年度慶典抽獎大會";headerBrandTitle.textContent=val,state.setEventName(val)},btnLoadSample.onclick=function(){var sample=["陳冠宇","林雅婷","黃家豪","張庭瑄","李宗翰","王欣怡","吳柏毅","劉佳穎","蔡宗佑","鄭宇軒","許雅筑","謝政廷","宋詩涵","楊凱傑","潘品妤","趙建宏","周佩珊","賴彥廷","徐若瑄","孫偉哲","葉子萱","郭志強","何羽婷","高銘傑","蕭美玲","羅家偉","梁雅雯","韓建華","馮品萱","鍾冠霖"].join("\n");inputCandidates.value=sample,state.setInputText(sample)},btnDedupNames.onclick=function(){var names=parseCandidateText(inputCandidates.value),unique=Array.from(new Set(names));inputCandidates.value=unique.join("\n"),state.setInputText(inputCandidates.value),openDialog("名單清理完成","已濾除重複人名，現有名冊共 "+unique.length+" 人。",!1)},btnClearNames.onclick=function(){openDialog("清空確認","確定清空目前名單？",!0,function(){inputCandidates.value="",state.setInputText("")})};var bundleScript=document.getElementById("__INITIAL_BUNDLE__");function renderPrizeInputs(){prizesList.innerHTML="";var isBottomUp="BOTTOM_UP"===state.config.drawOrder,totalPrizes=state.prizes.length;state.prizes.forEach(function(p,idx){var orderNum=isBottomUp?totalPrizes-idx:idx+1,isGrand=orderNum===totalPrizes,rankClass=isGrand?"prize-rank-pill grand":"prize-rank-pill",orderLabel=isGrand?"★ 壓軸大獎":"第 "+orderNum+" 順位",card=document.createElement("div");card.className="prize-card",card.innerHTML='<div class="'+rankClass+'">'+orderLabel+'</div><input type="text" value="'+escapeHtml(p.name)+'" placeholder="獎項名稱" data-id="'+p.id+'" class="p-name"><input type="number" min="1" value="'+p.totalQuota+'" data-id="'+p.id+'" class="p-quota" title="配額數量"><div class="reorder-btns"><button class="btn-icon btn-move-up" data-idx="'+idx+'" title="順位前移" '+(0===idx?'disabled style="opacity:0.2"':"")+'>▲</button><button class="btn-icon btn-move-down" data-idx="'+idx+'" title="順位後移" '+(idx===totalPrizes-1?'disabled style="opacity:0.2"':"")+'>▼</button></div><button class="btn-icon del btn-del-p" data-id="'+p.id+'" title="刪除獎項">✕</button>',prizesList.appendChild(card)}),prizesList.querySelectorAll(".p-name").forEach(function(inp){inp.oninput=function(){var id=this.getAttribute("data-id"),p=state.prizes.find(function(item){return item.id===id});p&&(p.name=this.value,state.validate())}}),prizesList.querySelectorAll(".p-quota").forEach(function(inp){inp.oninput=function(){var id=this.getAttribute("data-id"),p=state.prizes.find(function(item){return item.id===id});if(p){var val=Math.max(1,parseInt(this.value,10)||1);p.totalQuota=val,p.remainingQuota=val,state.validate()}}}),prizesList.querySelectorAll(".btn-move-up").forEach(function(btn){btn.onclick=function(){var idx=parseInt(this.getAttribute("data-idx"),10);state.movePrize(idx,idx-1),renderPrizeInputs()}}),prizesList.querySelectorAll(".btn-move-down").forEach(function(btn){btn.onclick=function(){var idx=parseInt(this.getAttribute("data-idx"),10);state.movePrize(idx,idx+1),renderPrizeInputs()}}),prizesList.querySelectorAll(".btn-del-p").forEach(function(btn){btn.onclick=function(){var id=this.getAttribute("data-id");state.removePrize(id),renderPrizeInputs()}})}bundleScript&&bundleScript.textContent.trim().length>0&&(state.importBundleBase64(bundleScript.textContent.trim()),inputEventName.value=state.eventName,headerBrandTitle.textContent=state.eventName,themeSelector.value=state.theme||"OBSIDIAN_GOLD",document.body.setAttribute("data-theme",state.theme||"OBSIDIAN_GOLD"),state.candidatePool.length>0&&state.prizes.length>0&&(inputCandidates.value=state.rawInputText)),btnAddPrize.onclick=function(){state.addPrize("獎項 "+(state.prizes.length+1),1),renderPrizeInputs()},selDrawOrder.onchange=function(){state.updateConfig({drawOrder:this.value}),renderPrizeInputs()},inputCandidates.oninput=function(){state.setInputText(this.value)},fileDropzone.onclick=function(){fileInput.click()},fileInput.onchange=function(e){var file=e.target.files&&e.target.files[0];if(file){var reader=new FileReader;reader.onload=function(evt){var content=evt.target.result||"";inputCandidates.value=content,state.setInputText(content)},reader.readAsText(file,"utf-8")}},chkAllowDup.onchange=function(){maxWinBox.style.display=this.checked?"flex":"none",state.updateConfig({allowDuplicates:this.checked,maxWinLimit:parseInt(inpMaxWinLimit.value,10)||2})},inpMaxWinLimit.oninput=function(){state.updateConfig({maxWinLimit:parseInt(this.value,10)||2})},chkAutoSwitch.onchange=function(){state.updateConfig({autoSwitchTier:this.checked})},btnStartStage.onclick=function(){audio.init(),state.validate()?(viewSetup.classList.remove("active"),viewStage.classList.add("active"),btnEmergencyEdit.classList.remove("hidden"),visualEngine.setCandidates(state.candidatePool),updateStageView()):openDialog("無法進入舞台","請先輸入至少一位名單人員，並確保獎項配額大於 0。",!1)},btnEmergencyEdit.onclick=function(){openDialog("返回設定頁面","確定返回設定頁面？目前未抽出的獎項進度將完整保留。",!0,function(){visualEngine.stop(),confetti.stop(),winnerModal.classList.remove("active"),state.emergencyEdit(),viewStage.classList.remove("active"),viewSetup.classList.add("active"),btnEmergencyEdit.classList.add("hidden")})};var MODE_NAMES={WINDOWED_WHEEL:"動態視窗輪盤 🎡",LOTTO_EGG:"樂透彩蛋機 🎲",SLOT_MACHINE:"復古跑馬拉霸 🎰",SPLIT_FLAP:"機械翻牌告示 📟",HYPERSPACE:"星際光速穿梭 🚀"};function updateStageView(){var cur=state.getCurrentPrize(),s=state.getState(),ordered=state.getOrderedPrizes();candidateBadge.textContent=s.candidatePool.length+" 人登記",historyCounter.textContent=s.history.length+" 人獲獎",stageCandidatesRemaining.textContent=s.candidatePool.length+" 人";var curIdx=-1;cur&&(curIdx=ordered.findIndex(function(p){return p.id===cur.id}));var activeMode=state.getModeForCurrentPrize();if(stageModeIndicator.textContent=MODE_NAMES[activeMode]||"幸運開獎",cur){var roundNum=curIdx>=0?curIdx+1:1,isGrand=roundNum===ordered.length;stageOrderTag.textContent=state.eventName+" ｜ 第 "+roundNum+" 輪 (共 "+ordered.length+" 輪)"+(isGrand?" ★ 壓軸大獎":""),stagePrizeName.textContent=cur.name,stageQuotaRemaining.textContent=cur.remainingQuota+" / "+cur.totalQuota}else stageOrderTag.textContent=state.eventName+" ｜ 抽獎圓滿完成",stagePrizeName.textContent="恭喜所有獲獎幸運兒",stageQuotaRemaining.textContent="全數抽滿";btnSpin.className="btn-stage-spin","READY"===s.status?(btnSpin.disabled=!1,btnSpin.textContent="開始抽獎",stageStatusHint.innerHTML="當前開獎視覺："+(MODE_NAMES[activeMode]||"")+' ｜ 輕按 <span style="background:var(--bg-surface); padding:2px 6px; border-radius:4px; color:#fff;">Space 空白鍵</span> 開始',visualEngine.setMode(activeMode)):"SPINNING"===s.status?(btnSpin.disabled=!0,btnSpin.textContent="搖獎中...",stageStatusHint.textContent="命運開獎進行中，全場矚目..."):"REVEALED"===s.status?(btnSpin.disabled=!1,btnSpin.textContent="抽取下一位"):"PARTIAL_FILLED"===s.status?(btnSpin.disabled=!1,btnSpin.className="btn-stage-spin btn-conclude",btnSpin.textContent="名冊抽空：結算大會",stageStatusHint.textContent="候選名冊已全數抽空！點擊按鈕結算大會，或點「返回設定」補充名單。"):"COMPLETED"===s.status&&(btnSpin.disabled=!0,btnSpin.textContent="大會圓滿落幕",stageStatusHint.textContent="恭喜所有幸運兒！可點選上方「匯出 CSV」下載中獎名冊"),function(){if(historyFeed.innerHTML="",0===state.history.length)return void(historyFeed.innerHTML='<div style="color:var(--text-muted); text-align:center; margin-top:40px; font-size:0.82rem;">大會即將開獎，拭目以待</div>');state.history.slice().reverse().forEach(function(h){var item=document.createElement("div");item.className="feed-item",item.innerHTML='<div><div class="feed-tier-name">#'+h.sequence+" "+escapeHtml(h.prizeName)+'</div><div class="feed-winner-name">'+escapeHtml(h.winnerName)+'</div></div><div style="font-size:0.75rem; color:var(--text-muted);">'+new Date(h.timestamp).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})+"</div>",historyFeed.appendChild(item)})}()}function triggerSpinAction(){audio.init();var s=state.status;if("READY"===s)try{var pending=state.startSpin();updateStageView(),visualEngine.spinTo(pending.mode,pending.winnerIndex,pending.winnerName,state.config.spinDurationMs,function(){var record=state.revealWinner();audio.playFanfare(),confetti.fire(),modalPrizeTag.textContent="恭喜榮獲 "+record.prizeName,modalWinnerName.textContent=record.winnerName,winnerModal.classList.add("active"),updateStageView()})}catch(err){console.warn(err)}else"REVEALED"===s?(winnerModal.classList.remove("active"),confetti.stop(),state.continueSpin(),visualEngine.setCandidates(state.candidatePool),updateStageView()):"PARTIAL_FILLED"===s&&(state.finishDraw(),updateStageView())}btnSpin.onclick=triggerSpinAction,btnModalContinue.onclick=function(){winnerModal.classList.remove("active"),confetti.stop(),"REVEALED"===state.status&&(state.continueSpin(),visualEngine.setCandidates(state.candidatePool),updateStageView())},window.addEventListener("keydown",function(e){if("Space"===e.code){if(document.activeElement&&("TEXTAREA"===document.activeElement.tagName||"INPUT"===document.activeElement.tagName))return;e.preventDefault(),viewStage.classList.contains("active")&&triggerSpinAction()}else"Escape"===e.code&&winnerModal.classList.contains("active")&&(winnerModal.classList.remove("active"),confetti.stop())}),btnExportCsv.onclick=function(){0!==state.history.length?downloadFile(generateCsv(state.history),(state.eventName||"大會").replace(/[\\\/:*?"<>|]/g,"_")+"_中獎名單_"+(new Date).toISOString().slice(0,10)+".csv","text/csv;charset=utf-8;"):openDialog("無中獎資料","目前尚未抽出中獎者，無法匯出 CSV。",!1)},btnResetAll.onclick=function(){openDialog("重置確認","確定完整重置所有中獎紀錄並恢復初始名單與配額？此操作不可復原。",!0,function(){visualEngine.stop(),confetti.stop(),winnerModal.classList.remove("active"),state.reset(),visualEngine.setCandidates(state.candidatePool),updateStageView()})},btnExportHtml.onclick=function(){if(state.validate()){var bundleB64=state.exportBundleBase64(),fullHtml=document.documentElement.outerHTML,bundleTag='<script id="__INITIAL_BUNDLE__" type="text/plain">\n'+bundleB64+"\n<\/script>",regex=/<script\s+id="__INITIAL_BUNDLE__"\s+type="text\/plain">[\s\S]*?<\/script>/i;downloadFile(regex.test(fullHtml)?"<!DOCTYPE html>\n"+fullHtml.replace(regex,bundleTag):"<!DOCTYPE html>\n"+fullHtml.replace("</body>",bundleTag+"\n</body>"),(state.eventName||"offline-lucky-draw").replace(/[\\\/:*?"<>|]/g,"_")+"-custom.html","text/html;charset=utf-8;")}else openDialog("無法匯出","請先輸入候選人名單與獎項配額！",!1)},renderPrizeInputs(),state.subscribe(function(ev,s){candidateBadge.textContent=s.candidatePool.length+" 人登記",btnStartStage.disabled=!state.validate()}),btnStartStage.disabled=!state.validate()}();
+</script>
 </body>
 </html>

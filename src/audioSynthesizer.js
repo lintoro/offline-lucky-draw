@@ -76,6 +76,75 @@
   };
 
   /**
+   * 播放機械翻牌聲 (Split-Flap Click)
+   */
+  AudioSynthesizer.prototype.playFlap = function () {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      var now = this.ctx.currentTime;
+      var osc = this.ctx.createOscillator();
+      var gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.exponentialRampToValueAtTime(100, now + 0.02);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.03);
+    } catch (e) {}
+  };
+
+  /**
+   * 播放彩蛋噴出與破殼「啵」聲 (Egg Pop)
+   */
+  AudioSynthesizer.prototype.playPop = function () {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      var now = this.ctx.currentTime;
+      var osc = this.ctx.createOscillator();
+      var gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.06);
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } catch (e) {}
+  };
+
+  /**
+   * 播放星際躍遷穿梭音效 (Hyperspace Sweep)
+   */
+  AudioSynthesizer.prototype.playWarp = function () {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      var now = this.ctx.currentTime;
+      var osc = this.ctx.createOscillator();
+      var gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(900, now + 0.25);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } catch (e) {}
+  };
+
+  /**
    * 播放中獎「慶祝和弦聲」 (Celebration Fanfare)
    * 採用大三和弦琶音與延音合成 (C5 -> E5 -> G5 -> C6)
    */

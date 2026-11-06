@@ -102,14 +102,27 @@
       };
     }) : [];
 
+    // 活動名稱與主題風格
+    this.eventName = typeof opts.eventName === 'string' && opts.eventName.trim().length > 0 ? opts.eventName.trim() : '年度慶典抽獎大會';
+    this.theme = typeof opts.theme === 'string' ? opts.theme : 'OBSIDIAN_GOLD';
+
     // 全域抽獎參數 (LuckyDrawConfig)
     this.config = {
       allowDuplicates: Boolean(opts.config && opts.config.allowDuplicates),
+      maxWinLimit: opts.config && typeof opts.config.maxWinLimit === 'number' ? Math.max(1, parseInt(opts.config.maxWinLimit, 10)) : 0,
       autoSwitchTier: opts.config && typeof opts.config.autoSwitchTier === 'boolean' ? opts.config.autoSwitchTier : true,
       drawOrder: opts.config && opts.config.drawOrder ? opts.config.drawOrder : 'BOTTOM_UP', // 'BOTTOM_UP' (小獎至大獎) | 'TOP_DOWN' (大獎至小獎)
       currentPrizeId: opts.config && opts.config.currentPrizeId ? opts.config.currentPrizeId : '',
       spinDurationMs: opts.config && typeof opts.config.spinDurationMs === 'number' ? opts.config.spinDurationMs : 4000
     };
+
+    // 每人累計中獎次數追蹤 (姓名 -> 次數)
+    this.winCounts = opts.winCounts && typeof opts.winCounts === 'object' ? Object.assign({}, opts.winCounts) : {};
+
+    // 5 種隨機開獎呈現模式排程佇列
+    this.ANIMATION_MODES = ['WINDOWED_WHEEL', 'LOTTO_EGG', 'SLOT_MACHINE', 'SPLIT_FLAP', 'HYPERSPACE'];
+    this.prizeModeMap = {};
+    this._scheduleAnimationModes();
 
     // 若未指定 currentPrizeId，依照抽獎順序指定初始獎項
     if (!this.config.currentPrizeId && this.prizes.length > 0) {
@@ -162,6 +175,8 @@
   // 取得快照 (Deep clone 狀態以防止外部竄改)
   StateManager.prototype.getState = function () {
     return {
+      eventName: this.eventName,
+      theme: this.theme,
       rawInputText: this.rawInputText,
       candidatePool: this.candidatePool.slice(),
       initialCandidates: this.initialCandidates.slice(),
@@ -169,8 +184,44 @@
       config: Object.assign({}, this.config),
       history: this.history.map(function (h) { return Object.assign({}, h); }),
       status: this.status,
+      winCounts: Object.assign({}, this.winCounts),
+      currentMode: this.getModeForCurrentPrize(),
       pendingSpin: this._pendingSpin ? Object.assign({}, this._pendingSpin) : null
     };
+  };
+
+  StateManager.prototype.setEventName = function (name) {
+    this.eventName = String(name || '').trim() || '年度慶典抽獎大會';
+    this._notify('EVENT_NAME_CHANGED', this.eventName);
+  };
+
+  StateManager.prototype.setTheme = function (theme) {
+    this.theme = String(theme || 'OBSIDIAN_GOLD');
+    this._notify('THEME_CHANGED', this.theme);
+  };
+
+  StateManager.prototype._scheduleAnimationModes = function () {
+    var modes = this.ANIMATION_MODES.slice();
+    for (var i = modes.length - 1; i > 0; i--) {
+      var j = getSecureRandomIndex(i + 1);
+      var tmp = modes[i];
+      modes[i] = modes[j];
+      modes[j] = tmp;
+    }
+    var ordered = this.getOrderedPrizes();
+    this.prizeModeMap = {};
+    for (var k = 0; k < ordered.length; k++) {
+      this.prizeModeMap[ordered[k].id] = modes[k % modes.length];
+    }
+  };
+
+  StateManager.prototype.getModeForCurrentPrize = function () {
+    var cur = this.getCurrentPrize();
+    if (!cur) return this.ANIMATION_MODES[0];
+    if (!this.prizeModeMap[cur.id]) {
+      this._scheduleAnimationModes();
+    }
+    return this.prizeModeMap[cur.id] || this.ANIMATION_MODES[0];
   };
 
   // 設定原始人名文字
@@ -251,6 +302,9 @@
       this.config.drawOrder = partial.drawOrder;
       var curPrize = this.getCurrentPrize();
       if (curPrize) this.config.currentPrizeId = curPrize.id;
+    }
+    if (typeof partial.maxWinLimit === 'number' && partial.maxWinLimit >= 1) {
+      this.config.maxWinLimit = Math.floor(partial.maxWinLimit);
     }
     if (typeof partial.spinDurationMs === 'number' && partial.spinDurationMs > 0) {
       this.config.spinDurationMs = partial.spinDurationMs;
@@ -373,9 +427,22 @@
       prize.remainingQuota -= 1;
     }
 
-    // 若不允許重複中獎，則將中獎者移出候選池
+    // 記錄中獎次數
+    var winner = pending.winnerName;
+    var count = (this.winCounts[winner] || 0) + 1;
+    this.winCounts[winner] = count;
+
+    // 依據是否允許重複及上限判定是否移出候選池
     if (!this.config.allowDuplicates) {
-      this.candidatePool.splice(pending.winnerIndex, 1);
+      var wIdx = this.candidatePool.indexOf(winner);
+      if (wIdx !== -1) {
+        this.candidatePool.splice(wIdx, 1);
+      }
+    } else if (this.config.maxWinLimit && count >= this.config.maxWinLimit) {
+      var wIdx = this.candidatePool.indexOf(winner);
+      if (wIdx !== -1) {
+        this.candidatePool.splice(wIdx, 1);
+      }
     }
 
     // 建立中獎紀錄
@@ -452,10 +519,12 @@
   StateManager.prototype.reset = function () {
     this._pendingSpin = null;
     this.history = [];
+    this.winCounts = {};
     this.candidatePool = this.initialCandidates.slice();
     this.prizes.forEach(function (p) {
       p.remainingQuota = p.totalQuota;
     });
+    this._scheduleAnimationModes();
     this.status = 'SETUP';
     this.validate();
     this._notify('RESET_COMPLETED');
@@ -467,11 +536,14 @@
    */
   StateManager.prototype.exportBundleBase64 = function () {
     var bundle = {
+      eventName: this.eventName,
+      theme: this.theme,
       rawInputText: this.rawInputText,
       candidatePool: this.candidatePool,
       prizes: this.prizes,
       config: this.config,
       history: this.history,
+      winCounts: this.winCounts,
       exportedAt: new Date().toISOString()
     };
     var jsonStr = JSON.stringify(bundle);
@@ -499,6 +571,8 @@
       }
       var bundle = JSON.parse(jsonStr);
       if (bundle && typeof bundle === 'object') {
+        if (typeof bundle.eventName === 'string') this.eventName = bundle.eventName;
+        if (typeof bundle.theme === 'string') this.theme = bundle.theme;
         if (typeof bundle.rawInputText === 'string') this.rawInputText = bundle.rawInputText;
         if (Array.isArray(bundle.candidatePool)) {
           this.candidatePool = bundle.candidatePool.slice();
@@ -507,6 +581,8 @@
         if (Array.isArray(bundle.prizes)) this.setPrizes(bundle.prizes);
         if (bundle.config && typeof bundle.config === 'object') this.updateConfig(bundle.config);
         if (Array.isArray(bundle.history)) this.history = bundle.history.slice();
+        if (bundle.winCounts && typeof bundle.winCounts === 'object') this.winCounts = Object.assign({}, bundle.winCounts);
+        this._scheduleAnimationModes();
         this.status = 'SETUP';
         this.validate();
         this._notify('BUNDLE_IMPORTED');

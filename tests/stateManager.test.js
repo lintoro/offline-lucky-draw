@@ -225,6 +225,68 @@ test('StateManager - 11. 候選池不足時手動提早結算 (finishDraw)', () 
   assert.equal(sm.history.length, 1);
 });
 
+test('StateManager - 12. 重複中獎次數上限公平性限制 (maxWinLimit)', () => {
+  const sm = new StateManager();
+  sm.setInputText('林冠廷\n陳柏宇');
+  sm.addPrize('普通獎項', 10);
+  // 允許重複中獎，但設定每人最多中獎 2 次
+  sm.updateConfig({ allowDuplicates: true, maxWinLimit: 2 });
+
+  // 模擬連續抽出
+  let linCount = 0;
+  for (let i = 0; i < 4; i++) {
+    if (sm.status === 'READY') {
+      const pending = sm.startSpin();
+      const rec = sm.revealWinner();
+      if (rec.winnerName === '林冠廷') linCount++;
+      sm.continueSpin();
+    }
+  }
+
+  // 驗證只要達到上限 2 次，林冠廷就會被移出候選池
+  assert.ok(sm.winCounts['林冠廷'] <= 2, '林冠廷中獎次數絕不能超過上限 2 次');
+  if (sm.winCounts['林冠廷'] === 2) {
+    assert.ok(!sm.candidatePool.includes('林冠廷'), '中滿 2 次後應自候選池移除');
+  }
+});
+
+test('StateManager - 13. 活動名稱與主題風格配置設定', () => {
+  const sm = new StateManager({ eventName: '2026 數位年會尾牙大抽獎', theme: 'ROYAL_CRIMSON' });
+  assert.equal(sm.eventName, '2026 數位年會尾牙大抽獎');
+  assert.equal(sm.theme, 'ROYAL_CRIMSON');
+
+  sm.setEventName('春酒狂歡');
+  assert.equal(sm.eventName, '春酒狂歡');
+  sm.setTheme('MIDNIGHT_SAPPHIRE');
+  assert.equal(sm.theme, 'MIDNIGHT_SAPPHIRE');
+});
+
+test('StateManager - 14. 五大開獎模式隨機排程與不重複保證', () => {
+  const sm = new StateManager();
+  sm.setInputText('A\nB\nC\nD\nE\nF');
+  const p1 = sm.addPrize('獎項 1', 1);
+  const p2 = sm.addPrize('獎項 2', 1);
+  const p3 = sm.addPrize('獎項 3', 1);
+  const p4 = sm.addPrize('獎項 4', 1);
+  const p5 = sm.addPrize('獎項 5', 1);
+
+  // 取得 5 個獎項的開獎模式
+  const modes = [
+    sm.prizeModeMap[p1.id],
+    sm.prizeModeMap[p2.id],
+    sm.prizeModeMap[p3.id],
+    sm.prizeModeMap[p4.id],
+    sm.prizeModeMap[p5.id]
+  ];
+
+  // 驗證 5 個模式互不相同 (Set 大小為 5)
+  const uniqueModes = new Set(modes);
+  assert.equal(uniqueModes.size, 5, '5 個獎項的開獎模式必須完全不重複');
+  for (const m of modes) {
+    assert.ok(sm.ANIMATION_MODES.includes(m), `模式 ${m} 必須屬於合法的 5 大開獎模式之一`);
+  }
+});
+
 test('StateManager - 9. 零持久化 (Zero-Persistence) 原始碼安全性靜態檢驗', () => {
   const fs = require('node:fs');
   const rawCode = fs.readFileSync(require.resolve('../src/stateManager.js'), 'utf-8');
