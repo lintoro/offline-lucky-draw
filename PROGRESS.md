@@ -23,8 +23,8 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **Stage 1** | **核心狀態機與 CSPRNG (StateManager)** | 純記憶體狀態流轉、CSPRNG 加密級隨機抽獎、名單正規化驗證、多階層獎項配額控管、緊急編輯與防呆 | 已完成 (Completed) | 9/9 通過 (100%) |
 | **Stage 2** | **雙模渲染與特效引擎 (RenderEngine & Audio)** | Canvas 彩色扇形輪盤（$\le 30$ 人）、Slot Reel 跑馬燈卡片（$> 30$ 人）、Web Audio 振盪器音效、Canvas Confetti 粒子 | 已完成 (Completed) | 5/5 通過 (100%) |
-| **Stage 3** | **安全匯出引擎 (BlobExporter & CsvExporter)** | Base64 安全自克隆 HTML 封裝、UTF-8 BOM RFC 4180 CSV 報表匯出與 Excel 公式注入防護 | 進行中 (In Progress) | 待執行 |
-| **Stage 4** | **單檔打包整合與 UI/UX (Single-File Assembly)** | 響應式投屏介面、鍵盤快捷鍵、嚴格 CSP 標頭嵌入、關閉即焚安全檢驗、全功能驗收清單驗證 | 待開始 (Pending) | - |
+| **Stage 3** | **安全匯出引擎 (BlobExporter & CsvExporter)** | Base64 安全自克隆 HTML 封裝、UTF-8 BOM RFC 4180 CSV 報表匯出與 Excel 公式注入防護 | 已完成 (Completed) | 4/4 通過 (100%) |
+| **Stage 4** | **單檔打包整合與 UI/UX (Single-File Assembly)** | 響應式投屏介面、鍵盤快捷鍵、嚴格 CSP 標頭嵌入、關閉即焚安全檢驗、全功能驗收清單驗證 | 進行中 (In Progress) | 待執行 |
 
 ---
 
@@ -46,5 +46,12 @@
 - [x] **T12** Web Audio 合成器原生降級（無音訊硬體或政策阻擋時平滑降級無拋錯）
 - [x] **T13** Canvas Confetti 粒子生命週期（重力、空氣阻力與銷毀清理）
 - [x] **T14** Stage 2 零外部依賴與零網路請求靜態掃描（無外部 mp3/wav/url）
+
+### Stage 3: Exporter & Security Contracts (2026-11-06)
+- [x] **T15** UTF-8 BOM 前置防亂碼檢驗（`\uFEFF` 開頭，確保 Excel 繁體中文零亂碼）
+- [x] **T16** Excel 公式注入防護（Formula Injection 檢測，首字為 `=`, `+`, `-`, `@` 自動跳脫前綴 `'`）
+- [x] **T17** RFC 4180 標準跳脫（逗號、雙引號、換行符雙重引號包裹）
+- [x] **T18** 自克隆 HTML Base64 Bundle 注入與覆蓋替換驗證
+
 
 
