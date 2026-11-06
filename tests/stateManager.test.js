@@ -182,6 +182,49 @@ test('StateManager - 8. 自克隆 Base64 Bundle 序列化與反序列化驗證',
   assert.equal(state2.history[0].winnerName, state1.history[0].winnerName);
 });
 
+test('StateManager - 10. 抽獎順序 (小獎至大獎 BOTTOM_UP vs 大獎至小獎 TOP_DOWN) 與獎項上下調整', () => {
+  const sm = new StateManager();
+  sm.setInputText('1\n2\n3\n4\n5');
+  const grand = sm.addPrize('特獎 (大獎)', 1);
+  const second = sm.addPrize('二獎 (中獎)', 1);
+  const third = sm.addPrize('三獎 (小獎)', 1);
+
+  // 預設 drawOrder 為 BOTTOM_UP (由小獎先抽: 三獎 -> 二獎 -> 特獎)
+  assert.equal(sm.config.drawOrder, 'BOTTOM_UP');
+  assert.equal(sm.getCurrentPrize().id, third.id, '預設應從最後加入的小獎開始抽');
+
+  // 第 1 輪抽取 (三獎)
+  sm.startSpin();
+  const r1 = sm.revealWinner();
+  assert.equal(r1.prizeName, '三獎 (小獎)');
+  sm.continueSpin();
+
+  // 自動推進到第 2 輪 (二獎)
+  assert.equal(sm.getCurrentPrize().id, second.id, '自動推進至二獎');
+  sm.startSpin();
+  const r2 = sm.revealWinner();
+  assert.equal(r2.prizeName, '二獎 (中獎)');
+  sm.continueSpin();
+
+  // 自動推進到壓軸大獎 (特獎)
+  assert.equal(sm.getCurrentPrize().id, grand.id, '自動推進至壓軸大獎');
+});
+
+test('StateManager - 11. 候選池不足時手動提早結算 (finishDraw)', () => {
+  const sm = new StateManager();
+  sm.setInputText('小王');
+  sm.addPrize('大獎', 3);
+
+  sm.startSpin();
+  sm.revealWinner();
+  assert.equal(sm.continueSpin(), 'PARTIAL_FILLED');
+
+  // 手動結束抽獎
+  assert.equal(sm.finishDraw(), 'COMPLETED');
+  assert.equal(sm.status, 'COMPLETED');
+  assert.equal(sm.history.length, 1);
+});
+
 test('StateManager - 9. 零持久化 (Zero-Persistence) 原始碼安全性靜態檢驗', () => {
   const fs = require('node:fs');
   const rawCode = fs.readFileSync(require.resolve('../src/stateManager.js'), 'utf-8');

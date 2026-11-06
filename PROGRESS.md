@@ -54,10 +54,13 @@
 - [x] **T18** 自克隆 HTML Base64 Bundle 注入與覆蓋替換驗證
 
 ### Stage 4: Assembly & Acceptance (2026-11-06)
-- [x] **T19** 單檔 HTML 體積檢驗（53.9 KB $\le 65 \text{ KB}$）與嚴格 CSP 標頭檢驗
+- [x] **T19** 單檔 HTML 體積檢驗（62.2 KB $\le 65 \text{ KB}$）與嚴格 CSP 標頭檢驗
 - [x] **T20** 零外部資源引用（0 外部腳本、0 外部樣式表、0 外部 URL 請求）
 - [x] **T21** 關閉即焚 (Zero Persistence) 完整性靜態掃描（0 筆 storage/cookie API）
 - [x] **T22** 自克隆錨點與全功能驗收清單核對
+- [x] **T23** 抽獎順序控制（`BOTTOM_UP` 小獎至大獎預設順序與動態上下調整）
+- [x] **T24** 候選名冊不足時提前結算 (`PARTIAL_FILLED` -> `finishDraw()` -> `COMPLETED`)
+
 
 
 

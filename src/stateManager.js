@@ -106,9 +106,18 @@
     this.config = {
       allowDuplicates: Boolean(opts.config && opts.config.allowDuplicates),
       autoSwitchTier: opts.config && typeof opts.config.autoSwitchTier === 'boolean' ? opts.config.autoSwitchTier : true,
-      currentPrizeId: opts.config && opts.config.currentPrizeId ? opts.config.currentPrizeId : (this.prizes[0] ? this.prizes[0].id : ''),
+      drawOrder: opts.config && opts.config.drawOrder ? opts.config.drawOrder : 'BOTTOM_UP', // 'BOTTOM_UP' (小獎至大獎) | 'TOP_DOWN' (大獎至小獎)
+      currentPrizeId: opts.config && opts.config.currentPrizeId ? opts.config.currentPrizeId : '',
       spinDurationMs: opts.config && typeof opts.config.spinDurationMs === 'number' ? opts.config.spinDurationMs : 4000
     };
+
+    // 若未指定 currentPrizeId，依照抽獎順序指定初始獎項
+    if (!this.config.currentPrizeId && this.prizes.length > 0) {
+      var initialOrdered = this.getOrderedPrizes();
+      if (initialOrdered.length > 0) {
+        this.config.currentPrizeId = initialOrdered[0].id;
+      }
+    }
 
     // 中獎歷程 (WinnerRecord[])
     this.history = Array.isArray(opts.history) ? opts.history.slice() : [];
@@ -186,11 +195,9 @@
       };
     });
 
-    // 確保 currentPrizeId 合法
-    var currentExists = this.prizes.some(function (p) { return p.id === this.config.currentPrizeId; }, this);
-    if (!currentExists && this.prizes.length > 0) {
-      this.config.currentPrizeId = this.prizes[0].id;
-    }
+    var ordered = this.getOrderedPrizes();
+    var firstAvailable = ordered.find(function (p) { return p.remainingQuota > 0; });
+    this.config.currentPrizeId = firstAvailable ? firstAvailable.id : (this.prizes[0] ? this.prizes[0].id : '');
 
     this.validate();
     this._notify('PRIZES_CHANGED');
@@ -206,8 +213,10 @@
       remainingQuota: total
     };
     this.prizes.push(prize);
-    if (!this.config.currentPrizeId) {
-      this.config.currentPrizeId = prize.id;
+    var ordered = this.getOrderedPrizes();
+    var firstAvailable = ordered.find(function (p) { return p.remainingQuota > 0; });
+    if (firstAvailable) {
+      this.config.currentPrizeId = firstAvailable.id;
     }
     this.validate();
     this._notify('PRIZE_ADDED', prize);
@@ -238,6 +247,11 @@
       var exists = this.prizes.some(function (p) { return p.id === partial.currentPrizeId; });
       if (exists) this.config.currentPrizeId = partial.currentPrizeId;
     }
+    if (partial.drawOrder === 'BOTTOM_UP' || partial.drawOrder === 'TOP_DOWN') {
+      this.config.drawOrder = partial.drawOrder;
+      var curPrize = this.getCurrentPrize();
+      if (curPrize) this.config.currentPrizeId = curPrize.id;
+    }
     if (typeof partial.spinDurationMs === 'number' && partial.spinDurationMs > 0) {
       this.config.spinDurationMs = partial.spinDurationMs;
     }
@@ -266,12 +280,41 @@
     }
   };
 
-  // 取得目前正在抽取的獎項
+  // 依據抽獎順序設定取得排序後的獎項
+  StateManager.prototype.getOrderedPrizes = function () {
+    var list = this.prizes.slice();
+    if (this.config.drawOrder === 'BOTTOM_UP') {
+      return list.reverse();
+    }
+    return list;
+  };
+
+  // 調整獎項上下順序
+  StateManager.prototype.movePrize = function (fromIndex, toIndex) {
+    if (fromIndex < 0 || fromIndex >= this.prizes.length || toIndex < 0 || toIndex >= this.prizes.length) return;
+    var item = this.prizes.splice(fromIndex, 1)[0];
+    this.prizes.splice(toIndex, 0, item);
+    var cur = this.getCurrentPrize();
+    if (cur) this.config.currentPrizeId = cur.id;
+    this.validate();
+    this._notify('PRIZES_REORDERED');
+  };
+
+  // 手動結束抽獎 (例如候選池不足 PARTIAL_FILLED 時進入 COMPLETED 結算)
+  StateManager.prototype.finishDraw = function () {
+    this._pendingSpin = null;
+    this.status = 'COMPLETED';
+    this._notify('ALL_QUOTA_FILLED');
+    return this.status;
+  };
+
+  // 取得目前正在抽取的獎項 (遵循抽獎順序)
   StateManager.prototype.getCurrentPrize = function () {
     var id = this.config.currentPrizeId;
     var prize = this.prizes.find(function (p) { return p.id === id; });
-    if (!prize && this.prizes.length > 0) {
-      prize = this.prizes.find(function (p) { return p.remainingQuota > 0; }) || this.prizes[0];
+    if ((!prize || prize.remainingQuota <= 0) && this.prizes.length > 0) {
+      var ordered = this.getOrderedPrizes();
+      prize = ordered.find(function (p) { return p.remainingQuota > 0; }) || ordered[0];
       if (prize) this.config.currentPrizeId = prize.id;
     }
     return prize || null;
@@ -363,7 +406,8 @@
 
     // 若當前獎項抽滿且開啟自動切換
     if (curPrize && curPrize.remainingQuota <= 0 && this.config.autoSwitchTier) {
-      var nextPrize = this.prizes.find(function (p) { return p.remainingQuota > 0; });
+      var ordered = this.getOrderedPrizes();
+      var nextPrize = ordered.find(function (p) { return p.remainingQuota > 0; });
       if (nextPrize) {
         this.config.currentPrizeId = nextPrize.id;
         curPrize = nextPrize;
