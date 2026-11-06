@@ -24,11 +24,11 @@
 | **Stage 1** | **核心狀態機與 CSPRNG (StateManager)** | 純記憶體狀態流轉、CSPRNG 加密級隨機抽獎、名單正規化驗證、多階層獎項配額控管、緊急編輯與防呆 | 已完成 (Completed) | 9/9 通過 (100%) |
 | **Stage 2** | **雙模渲染與特效引擎 (RenderEngine & Audio)** | Canvas 彩色扇形輪盤（$\le 30$ 人）、Slot Reel 跑馬燈卡片（$> 30$ 人）、Web Audio 振盪器音效、Canvas Confetti 粒子 | 已完成 (Completed) | 5/5 通過 (100%) |
 | **Stage 3** | **安全匯出引擎 (BlobExporter & CsvExporter)** | Base64 安全自克隆 HTML 封裝、UTF-8 BOM RFC 4180 CSV 報表匯出與 Excel 公式注入防護 | 已完成 (Completed) | 4/4 通過 (100%) |
-| **Stage 4** | **單檔打包整合與 UI/UX (Single-File Assembly)** | 響應式投屏介面、鍵盤快捷鍵、嚴格 CSP 標頭嵌入、關閉即焚安全檢驗、全功能驗收清單驗證 | 進行中 (In Progress) | 待執行 |
+| **Stage 4** | **單檔打包整合與 UI/UX (Single-File Assembly)** | 響應式投屏介面、鍵盤快捷鍵、嚴格 CSP 標頭嵌入、關閉即焚安全檢驗、全功能驗收清單驗證 | 已完成 (Completed) | 4/4 通過 (100%) |
 
 ---
 
-## 測試矩陣檢驗紀錄 (Test Verification Log)
+## 測試矩陣檢驗紀錄 (Test Verification Log - 總計 22/22 項通過，100%)
 ### Stage 1: StateManager & CSPRNG (2026-11-06)
 - [x] **T01** 名單解析與空行修剪過濾（`\r\n` CRLF 與頭尾空格自動修剪）
 - [x] **T02** 狀態機雙向合法轉移（`SETUP` <-> `READY` 邊界防呆）
@@ -52,6 +52,13 @@
 - [x] **T16** Excel 公式注入防護（Formula Injection 檢測，首字為 `=`, `+`, `-`, `@` 自動跳脫前綴 `'`）
 - [x] **T17** RFC 4180 標準跳脫（逗號、雙引號、換行符雙重引號包裹）
 - [x] **T18** 自克隆 HTML Base64 Bundle 注入與覆蓋替換驗證
+
+### Stage 4: Assembly & Acceptance (2026-11-06)
+- [x] **T19** 單檔 HTML 體積檢驗（53.9 KB $\le 65 \text{ KB}$）與嚴格 CSP 標頭檢驗
+- [x] **T20** 零外部資源引用（0 外部腳本、0 外部樣式表、0 外部 URL 請求）
+- [x] **T21** 關閉即焚 (Zero Persistence) 完整性靜態掃描（0 筆 storage/cookie API）
+- [x] **T22** 自克隆錨點與全功能驗收清單核對
+
 
 
 
