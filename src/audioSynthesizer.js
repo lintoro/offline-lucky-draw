@@ -1,0 +1,134 @@
+/**
+ * 純前端單檔離線抽獎 Web 應用 - 音效合成器 (AudioSynthesizer)
+ * 規格版本: v1.1.0
+ * 
+ * 技術特性:
+ * - 100% 原生 Web Audio API 合成，零外部音訊檔案依賴
+ * - 支援自動播放政策降級與使用者手勢喚醒 (audioCtx.resume)
+ */
+
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+    root.AudioSynthesizer = factory();
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  function AudioSynthesizer() {
+    this.ctx = null;
+    this.enabled = true;
+    this._initialized = false;
+  }
+
+  // 初始化或喚醒 AudioContext (需在使用者互動後呼叫)
+  AudioSynthesizer.prototype.init = function () {
+    if (this._initialized && this.ctx) {
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(function () {});
+      }
+      return;
+    }
+
+    try {
+      var AudioCtxClass = (typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) ||
+                          (typeof globalThis !== 'undefined' && (globalThis.AudioContext || globalThis.webkitAudioContext));
+      if (AudioCtxClass) {
+        this.ctx = new AudioCtxClass();
+        this._initialized = true;
+      }
+    } catch (e) {
+      console.warn('[AudioSynthesizer] Web Audio API not supported or blocked:', e);
+      this.enabled = false;
+    }
+  };
+
+  /**
+   * 播放指針撥動「噠噠聲」 (Tick Sound)
+   * 以短促的高頻方波/正弦波與快速指數衰減模擬機械碰撞
+   */
+  AudioSynthesizer.prototype.playTick = function () {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    try {
+      var now = this.ctx.currentTime;
+      var osc = this.ctx.createOscillator();
+      var gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(150, now + 0.035);
+
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } catch (err) {
+      // 靜默降級，不影響主動畫
+    }
+  };
+
+  /**
+   * 播放中獎「慶祝和弦聲」 (Celebration Fanfare)
+   * 採用大三和弦琶音與延音合成 (C5 -> E5 -> G5 -> C6)
+   */
+  AudioSynthesizer.prototype.playFanfare = function () {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    try {
+      var self = this;
+      var notes = [
+        { freq: 523.25, time: 0.00, dur: 0.4 }, // C5
+        { freq: 659.25, time: 0.10, dur: 0.4 }, // E5
+        { freq: 783.99, time: 0.20, dur: 0.5 }, // G5
+        { freq: 1046.50, time: 0.32, dur: 1.2 }  // C6 (長音)
+      ];
+
+      var baseTime = this.ctx.currentTime;
+
+      notes.forEach(function (n) {
+        var startTime = baseTime + n.time;
+        var stopTime = startTime + n.dur;
+
+        var osc = self.ctx.createOscillator();
+        var gain = self.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(n.freq, startTime);
+
+        gain.gain.setValueAtTime(0.001, startTime);
+        gain.gain.linearRampToValueAtTime(0.3, startTime + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, stopTime);
+
+        osc.connect(gain);
+        gain.connect(self.ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(stopTime);
+      });
+    } catch (err) {
+      // 靜默降級
+    }
+  };
+
+  AudioSynthesizer.prototype.close = function () {
+    if (this.ctx && typeof this.ctx.close === 'function') {
+      try {
+        this.ctx.close();
+      } catch (e) {}
+    }
+    this.ctx = null;
+    this._initialized = false;
+  };
+
+  return AudioSynthesizer;
+});

@@ -22,8 +22,8 @@
 | 階段 | 模組名稱 | 描述 | 狀態 | 測試覆蓋 |
 | :--- | :--- | :--- | :--- | :--- |
 | **Stage 1** | **核心狀態機與 CSPRNG (StateManager)** | 純記憶體狀態流轉、CSPRNG 加密級隨機抽獎、名單正規化驗證、多階層獎項配額控管、緊急編輯與防呆 | 已完成 (Completed) | 9/9 通過 (100%) |
-| **Stage 2** | **雙模渲染與特效引擎 (RenderEngine & Audio)** | Canvas 彩色扇形輪盤（$\le 30$ 人）、Slot Reel 跑馬燈卡片（$> 30$ 人）、Web Audio 振盪器音效、Canvas Confetti 粒子 | 下一階段 (Next) | - |
-| **Stage 3** | **安全匯出引擎 (BlobExporter & CsvExporter)** | Base64 安全自克隆 HTML 封裝、UTF-8 BOM RFC 4180 CSV 報表匯出與 Excel 公式注入防護 | 待開始 (Pending) | - |
+| **Stage 2** | **雙模渲染與特效引擎 (RenderEngine & Audio)** | Canvas 彩色扇形輪盤（$\le 30$ 人）、Slot Reel 跑馬燈卡片（$> 30$ 人）、Web Audio 振盪器音效、Canvas Confetti 粒子 | 已完成 (Completed) | 5/5 通過 (100%) |
+| **Stage 3** | **安全匯出引擎 (BlobExporter & CsvExporter)** | Base64 安全自克隆 HTML 封裝、UTF-8 BOM RFC 4180 CSV 報表匯出與 Excel 公式注入防護 | 進行中 (In Progress) | 待執行 |
 | **Stage 4** | **單檔打包整合與 UI/UX (Single-File Assembly)** | 響應式投屏介面、鍵盤快捷鍵、嚴格 CSP 標頭嵌入、關閉即焚安全檢驗、全功能驗收清單驗證 | 待開始 (Pending) | - |
 
 ---
@@ -39,4 +39,12 @@
 - [x] **T07** 緊急中途編輯中斷（`EMERGENCY_EDIT` 安全取消狀態並保留輸入）
 - [x] **T08** 自克隆 Base64 安全封裝還原（Round-trip 雙向測試）
 - [x] **T09** 靜態資安掃描（零持久化檢測：無 `localStorage`、`sessionStorage`、`indexedDB`、`cookie`，無偽隨機 `Math.random`）
+
+### Stage 2: RenderEngine & AudioSynthesizer (2026-11-06)
+- [x] **T10** 自適應雙模臨界切換（$\le 30$ 為 WHEEL 輪盤，$> 30$ 自動切換為 SLOT 跑馬燈）
+- [x] **T11** 動畫幀與緩衝區清理（`stop()` 清除 `animationId`，防 GPU / CPU 洩漏）
+- [x] **T12** Web Audio 合成器原生降級（無音訊硬體或政策阻擋時平滑降級無拋錯）
+- [x] **T13** Canvas Confetti 粒子生命週期（重力、空氣阻力與銷毀清理）
+- [x] **T14** Stage 2 零外部依賴與零網路請求靜態掃描（無外部 mp3/wav/url）
+
 
