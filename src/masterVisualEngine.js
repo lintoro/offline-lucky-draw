@@ -29,10 +29,12 @@
     this.audio = audioSynthesizer || null;
 
     this.candidates = [];
-    this.currentMode = 'WINDOWED_WHEEL';
+    this.currentMode = 'RIBBON_TAPE';
     this.animId = null;
     this.isSpinning = false;
-    this.wheelFinalAngle = 0;
+    this.ribbonFinalOffset = 0;
+    this.ribbonTargetIndex = 0;
+    this.ribbonStrip = [];
 
     this.lottoBalls = [];
     this.stars = [];
@@ -43,14 +45,15 @@
   };
 
   MasterVisualEngine.prototype.setMode = function (mode) {
-    this.currentMode = mode || 'WINDOWED_WHEEL';
+    if (mode === 'WINDOWED_WHEEL') mode = 'RIBBON_TAPE';
+    this.currentMode = mode || 'RIBBON_TAPE';
     this.renderStatic();
   };
 
   MasterVisualEngine.prototype.renderStatic = function () {
     if (!this.canvas || !this.ctx) return;
-    if (this.currentMode === 'WINDOWED_WHEEL') {
-      this._drawWheelStatic(0, 1, null, false);
+    if (this.currentMode === 'RIBBON_TAPE' || this.currentMode === 'WINDOWED_WHEEL') {
+      this._drawRibbonStatic(0, 1, null, false);
     } else if (this.currentMode === 'LOTTO_EGG') {
       this._drawLottoStatic();
     } else if (this.currentMode === 'SLOT_MACHINE') {
@@ -64,105 +67,131 @@
   };
 
   /**
-   * 1. 動態視窗輪盤 (Windowed Wheel)
-   * 指針位於 12 點鐘方向 (270度)，將目標扇區中心精確對準 270度
+   * 1. 全景開箱滑軌 (Cinematic CS:GO Style Ribbon Tape)
+   * 支援 100+ 人全員在場：名牌水平滑軌，準心精確對齊置中
    */
-  MasterVisualEngine.prototype._drawWheelStatic = function (angle, zoomFactor, highlightName, isRevealed) {
+  MasterVisualEngine.prototype._drawRibbonStatic = function (offset, pulseScale, winnerName, isRevealed, customStrip) {
+    if (!this.ctx || !this.canvas) return;
     var ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
     ctx.clearRect(0, 0, w, h);
-    var cx = w / 2, cy = h / 2, r = 175;
-    angle = angle || 0;
-    zoomFactor = zoomFactor || 1;
+    var cx = w / 2, cy = h / 2;
+    offset = offset || 0;
+    pulseScale = pulseScale || 1;
 
-    ctx.save();
-    if (zoomFactor > 1) {
-      ctx.translate(cx, cy);
-      ctx.scale(zoomFactor, zoomFactor);
-      ctx.translate(-cx, -cy);
+    var cardW = 160;
+    var cardH = 140;
+    var cardGap = 16;
+    var stride = cardW + cardGap; // 176
+
+    var strip = customStrip || this.ribbonStrip;
+    if (!strip || strip.length === 0) {
+      var list = (this.candidates && this.candidates.length > 0) ? this.candidates : ['幸運候選人', '尊貴貴賓', '大會嘉賓', '現場抽獎'];
+      strip = [];
+      for (var s = 0; s < 30; s++) {
+        strip.push(list[s % list.length]);
+      }
     }
 
-    // 外圈金屬外框
-    ctx.beginPath();
-    ctx.arc(cx, cy, 183, 0, 2 * Math.PI);
-    ctx.fillStyle = '#181a1f';
-    ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#d4af37';
-    ctx.stroke();
+    // 1. 滑軌背景底座與金屬軌道
+    var trackY = cy - cardH / 2 - 14;
+    var trackH = cardH + 28;
 
-    var sliceAngle = (2 * Math.PI) / 12; // 30度
-    var palette = ['#8b1e1e', '#1c3d5a', '#1a4731', '#744210', '#975a16', '#2d3748'];
-    var winnerSlice = 9; // 9 號扇區 (其中心角在 angle = -sliceAngle/2 時剛好對齊 270度)
+    ctx.fillStyle = '#0f1117';
+    ctx.fillRect(0, trackY, w, trackH);
 
-    for (var i = 0; i < 12; i++) {
-      var s = angle + i * sliceAngle;
-      var e = s + sliceAngle;
+    var railGrad = ctx.createLinearGradient(0, 0, w, 0);
+    railGrad.addColorStop(0, '#3f2d08');
+    railGrad.addColorStop(0.25, '#aa820a');
+    railGrad.addColorStop(0.5, '#fef08a');
+    railGrad.addColorStop(0.75, '#aa820a');
+    railGrad.addColorStop(1, '#3f2d08');
+
+    ctx.fillStyle = railGrad;
+    ctx.fillRect(0, trackY, w, 3);
+    ctx.fillRect(0, trackY + trackH - 3, w, 3);
+
+    // 2. 繪製所有可見卡片
+    var firstVisible = Math.max(0, Math.floor((offset - cx - stride) / stride));
+    var lastVisible = Math.min(strip.length - 1, Math.ceil((offset + cx + stride) / stride));
+
+    for (var i = firstVisible; i <= lastVisible; i++) {
+      var itemX = cx + i * stride - offset;
+      var isTargetCard = (isRevealed && i === this.ribbonTargetIndex);
+      var scale = isTargetCard ? pulseScale : 1;
+
+      ctx.save();
+      ctx.translate(itemX, cy);
+      if (scale !== 1) {
+        ctx.scale(scale, scale);
+      }
+
+      var cardLeft = -cardW / 2;
+      var cardTop = -cardH / 2;
+
+      var cardGrad = ctx.createLinearGradient(0, cardTop, 0, cardTop + cardH);
+      if (isTargetCard) {
+        cardGrad.addColorStop(0, '#2e2614');
+        cardGrad.addColorStop(0.5, '#1e1c18');
+        cardGrad.addColorStop(1, '#141312');
+      } else {
+        cardGrad.addColorStop(0, '#1c1f28');
+        cardGrad.addColorStop(1, '#111318');
+      }
 
       ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, r, s, e);
-      ctx.closePath();
-
-      ctx.fillStyle = palette[i % palette.length];
+      ctx.roundRect(cardLeft, cardTop, cardW, cardH, 10);
+      ctx.fillStyle = cardGrad;
       ctx.fill();
 
-      // 扇區邊線
-      ctx.lineWidth = (i === winnerSlice && isRevealed) ? 3 : 1.5;
-      ctx.strokeStyle = (i === winnerSlice && isRevealed) ? '#fde047' : 'rgba(212, 175, 55, 0.4)';
+      ctx.lineWidth = isTargetCard ? 3.5 : 1.5;
+      ctx.strokeStyle = isTargetCard ? '#fde047' : 'rgba(212, 175, 55, 0.35)';
+      if (isTargetCard) {
+        ctx.shadowColor = '#d4af37';
+        ctx.shadowBlur = 18;
+      }
       ctx.stroke();
+      ctx.shadowBlur = 0;
 
-      // 人名文字
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(s + sliceAngle / 2);
-      ctx.textAlign = 'right';
+      ctx.fillStyle = isTargetCard ? 'rgba(253, 224, 71, 0.2)' : 'rgba(255, 255, 255, 0.06)';
+      ctx.fillRect(cardLeft + 10, cardTop + 10, cardW - 20, 22);
+      ctx.fillStyle = isTargetCard ? '#fde047' : '#d4af37';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#f4f4f5';
-      ctx.font = 'bold 15px sans-serif';
+      var tagText = isTargetCard ? '★ 幸運獲獎者' : ('#' + ((i % (this.candidates.length || 1)) + 1));
+      ctx.fillText(tagText, 0, cardTop + 21);
 
-      var displayName = (highlightName && i === winnerSlice)
-        ? highlightName
-        : (this.candidates[i % (this.candidates.length || 1)] || '...');
-      if (displayName.length > 6) displayName = displayName.substring(0, 5) + '…';
-      ctx.fillText(displayName, 153, 0);
+      var nameStr = (isTargetCard && winnerName) ? winnerName : strip[i];
+      ctx.fillStyle = isTargetCard ? '#ffffff' : '#f4f4f5';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(nameStr, 0, cardTop + 72);
+
+      var stripColors = ['#e53e3e', '#d4af37', '#38bdf8', '#10b981', '#a855f7'];
+      ctx.fillStyle = isTargetCard ? '#fde047' : stripColors[i % stripColors.length];
+      ctx.fillRect(cardLeft + 12, cardTop + cardH - 12, cardW - 24, 3);
+
       ctx.restore();
     }
 
-    // 中獎扇區高光邊框
-    if (isRevealed) {
-      var ws = angle + winnerSlice * sliceAngle;
-      var we = ws + sliceAngle;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, r + 2, ws, we);
-      ctx.closePath();
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = '#fde047';
-      ctx.shadowColor = '#d4af37';
-      ctx.shadowBlur = 15;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-    }
+    // 3. 左右邊緣暗部漸變遮罩 (Cinematic Vignette)
+    var leftVignette = ctx.createLinearGradient(0, 0, 140, 0);
+    leftVignette.addColorStop(0, 'rgba(17, 18, 21, 0.96)');
+    leftVignette.addColorStop(1, 'rgba(17, 18, 21, 0)');
+    ctx.fillStyle = leftVignette;
+    ctx.fillRect(0, trackY, 140, trackH);
 
-    // 中心轉軸
-    ctx.beginPath();
-    ctx.arc(cx, cy, 26, 0, 2 * Math.PI);
-    ctx.fillStyle = '#d4af37';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
+    var rightVignette = ctx.createLinearGradient(w - 140, 0, w, 0);
+    rightVignette.addColorStop(0, 'rgba(17, 18, 21, 0)');
+    rightVignette.addColorStop(1, 'rgba(17, 18, 21, 0.96)');
+    ctx.fillStyle = rightVignette;
+    ctx.fillRect(w - 140, trackY, 140, trackH);
 
-    // 12 點鐘頂部指針 (指針中心在 270度垂直向下指)
+    // 4. 中央準心指針 (Central Laser Reticle & Pointers)
     ctx.beginPath();
-    ctx.moveTo(cx, cy - r + 18);
-    ctx.lineTo(cx - 14, cy - r - 14);
-    ctx.lineTo(cx + 14, cy - r - 14);
-    ctx.closePath();
-    ctx.fillStyle = isRevealed ? '#fde047' : '#d4af37';
-    ctx.fill();
+    ctx.moveTo(cx, trackY);
+    ctx.lineTo(cx, trackY + trackH);
     ctx.lineWidth = 2;
-    ctx.strokeStyle = '#ffffff';
+    ctx.strokeStyle = isRevealed ? '#fde047' : 'rgba(212, 175, 55, 0.7)';
     if (isRevealed) {
       ctx.shadowColor = '#d4af37';
       ctx.shadowBlur = 12;
@@ -170,7 +199,41 @@
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    ctx.restore();
+    // 頂部倒三角箭頭
+    ctx.beginPath();
+    ctx.moveTo(cx - 14, trackY - 14);
+    ctx.lineTo(cx + 14, trackY - 14);
+    ctx.lineTo(cx, trackY + 4);
+    ctx.closePath();
+    ctx.fillStyle = isRevealed ? '#fde047' : '#d4af37';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+
+    // 底部正三角箭頭
+    ctx.beginPath();
+    ctx.moveTo(cx - 14, trackY + trackH + 14);
+    ctx.lineTo(cx + 14, trackY + trackH + 14);
+    ctx.lineTo(cx, trackY + trackH - 4);
+    ctx.closePath();
+    ctx.fillStyle = isRevealed ? '#fde047' : '#d4af37';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+
+    if (!isRevealed) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('全景開箱滑軌 - 全員名冊依序排列滾動', cx, h - 35);
+    }
+  };
+
+  // 向下相容別名
+  MasterVisualEngine.prototype._drawWheelStatic = function (angle, zoomFactor, highlightName, isRevealed) {
+    this._drawRibbonStatic(0, zoomFactor, highlightName, isRevealed);
   };
 
   /**
@@ -331,6 +394,7 @@
   };
 
   MasterVisualEngine.prototype._drawLottoStatic = function () {
+    if (!this.ctx || !this.canvas) return;
     var ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
     ctx.clearRect(0, 0, w, h);
     var cx = w / 2, cy = 160, R = 120;
@@ -345,6 +409,7 @@
   };
 
   MasterVisualEngine.prototype._drawLottoWinnerCelebration = function (winnerName, pulseScale) {
+    if (!this.ctx || !this.canvas) return;
     var ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
     ctx.clearRect(0, 0, w, h);
     var cx = w / 2, cy = 160, R = 120;
@@ -397,6 +462,7 @@
    * 3. 復古拉霸輪軸 (Slot Machine)
    */
   MasterVisualEngine.prototype._drawSlotStatic = function (name, pulseScale, isLocked) {
+    if (!this.ctx || !this.canvas) return;
     var ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
     ctx.clearRect(0, 0, w, h);
     var cx = w / 2, cy = h / 2;
@@ -440,6 +506,7 @@
    * 4. 翻牌式機械看板 (Split-Flap Display)
    */
   MasterVisualEngine.prototype._drawFlapStatic = function (text, pulseScale, isLocked) {
+    if (!this.ctx || !this.canvas) return;
     var ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
     ctx.clearRect(0, 0, w, h);
     var cx = w / 2, cy = h / 2;
@@ -498,6 +565,7 @@
   };
 
   MasterVisualEngine.prototype._drawHyperspaceStatic = function (targetName, pulseScale, isLocked) {
+    if (!this.ctx || !this.canvas) return;
     var ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
     ctx.fillStyle = '#08090d';
     ctx.fillRect(0, 0, w, h);
@@ -538,16 +606,22 @@
    * 中獎後共振慶祝動畫 (800ms，與 AudioSynthesizer 的 Fanfare 0.8s 完全同步結尾)
    */
   MasterVisualEngine.prototype.celebrateWinner = function (winnerName, durationMs, onDone) {
+    this.stop();
     var self = this;
-    var startTime = performance.now();
     durationMs = durationMs || 800;
+    if (!this.canvas || !this.ctx) {
+      this.isSpinning = false;
+      if (typeof onDone === 'function') onDone();
+      return;
+    }
+    var startTime = performance.now();
 
     function pulseStep(now) {
       var p = Math.min(1, (now - startTime) / durationMs);
       var pulseScale = 1 + 0.08 * Math.sin(p * Math.PI);
 
-      if (self.currentMode === 'WINDOWED_WHEEL') {
-        self._drawWheelStatic(self.wheelFinalAngle, pulseScale, winnerName, true);
+      if (self.currentMode === 'RIBBON_TAPE' || self.currentMode === 'WINDOWED_WHEEL') {
+        self._drawRibbonStatic(self.ribbonFinalOffset, pulseScale, winnerName, true);
       } else if (self.currentMode === 'LOTTO_EGG') {
         self._drawLottoWinnerCelebration(winnerName, pulseScale);
       } else if (self.currentMode === 'SLOT_MACHINE') {
@@ -576,36 +650,60 @@
   MasterVisualEngine.prototype.spinTo = function (mode, targetIndex, targetName, durationMs, onDone) {
     this.stop();
     this.isSpinning = true;
-    this.currentMode = mode || 'WINDOWED_WHEEL';
+    mode = mode || this.currentMode || 'WINDOWED_WHEEL';
+    this.currentMode = mode;
     var self = this;
     durationMs = durationMs || 3800;
 
-    if (mode === 'WINDOWED_WHEEL') {
-      var startTime = performance.now();
-      var sliceAngle = (2 * Math.PI) / 12;
-      var extraRounds = 8 * Math.PI * 2;
-      // 關鍵修復：減去半個扇區角 (-sliceAngle / 2)，讓 9 號目標扇區中心精確停在 12 點鐘頂部指針 (270度) 正中
-      var finalAngle = extraRounds - (sliceAngle / 2);
-      this.wheelFinalAngle = finalAngle;
-      var lastTick = 0;
+    if (mode === 'RIBBON_TAPE' || mode === 'WINDOWED_WHEEL') {
+      var stride = 176;
+      var pool = (self.candidates && self.candidates.length > 0) ? self.candidates : ['幸運候選人', '尊貴貴賓', '大會嘉賓', '現場抽獎'];
+      var poolLen = pool.length;
+      var targetK = Math.max(poolLen, 45);
+      var strip = [];
+      for (var idx = 0; idx <= targetK + 8; idx++) {
+        if (idx === targetK) {
+          strip.push(targetName);
+        } else {
+          strip.push(pool[idx % pool.length]);
+        }
+      }
+      self.ribbonStrip = strip;
+      self.ribbonTargetIndex = targetK;
+      var finalOffset = targetK * stride;
+      self.ribbonFinalOffset = finalOffset;
+      var lastCardTick = -1;
+    }
 
-      this.animId = requestAnimationFrame(function stepWheel(now) {
+    if (!this.canvas || !this.ctx) {
+      setTimeout(function () {
+        self.isSpinning = false;
+        if (typeof onDone === 'function') onDone();
+      }, 50);
+      return;
+    }
+
+    if (mode === 'RIBBON_TAPE' || mode === 'WINDOWED_WHEEL') {
+      var startTime = performance.now();
+
+      this.animId = requestAnimationFrame(function stepRibbon(now) {
         if (!self.isSpinning) return;
         var p = Math.min(1, (now - startTime) / durationMs);
         var eased = easeOutQuint(p);
-        var curAngle = finalAngle * eased;
+        var curOffset = finalOffset * eased;
 
-        if (now - lastTick > 40 + 200 * p) {
-          lastTick = now;
+        var curCardIndex = Math.floor(curOffset / stride);
+        if (curCardIndex !== lastCardTick) {
+          lastCardTick = curCardIndex;
           if (self.audio) self.audio.playTick();
         }
 
-        var zoom = (p > 0.85) ? (1 + 0.35 * ((p - 0.85) / 0.15)) : 1;
-        self._drawWheelStatic(curAngle, zoom, targetName, p >= 0.98);
+        self._drawRibbonStatic(curOffset, 1, targetName, p >= 0.99);
 
         if (p < 1) {
-          self.animId = requestAnimationFrame(stepWheel);
+          self.animId = requestAnimationFrame(stepRibbon);
         } else {
+          self._drawRibbonStatic(finalOffset, 1, targetName, true);
           if (typeof onDone === 'function') onDone();
         }
       });

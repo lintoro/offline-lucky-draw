@@ -119,8 +119,8 @@
     // 每人累計中獎次數追蹤 (姓名 -> 次數)
     this.winCounts = opts.winCounts && typeof opts.winCounts === 'object' ? Object.assign({}, opts.winCounts) : {};
 
-    // 5 種隨機開獎呈現模式排程佇列
-    this.ANIMATION_MODES = ['WINDOWED_WHEEL', 'LOTTO_EGG', 'SLOT_MACHINE', 'SPLIT_FLAP', 'HYPERSPACE'];
+    // 5 種隨機開獎呈現模式排程佇列 (全景開箱滑軌、樂透機、拉霸、翻牌、時空光斑)
+    this.ANIMATION_MODES = ['RIBBON_TAPE', 'LOTTO_EGG', 'SLOT_MACHINE', 'SPLIT_FLAP', 'HYPERSPACE'];
     this.prizeModeMap = {};
     this._scheduleAnimationModes();
 
@@ -397,13 +397,15 @@
 
     var winnerIndex = getSecureRandomIndex(this.candidatePool.length);
     var winnerName = this.candidatePool[winnerIndex];
+    var mode = this.getModeForCurrentPrize();
 
     this.status = 'SPINNING';
     this._pendingSpin = {
       winnerIndex: winnerIndex,
       winnerName: winnerName,
       prizeId: prize.id,
-      prizeName: prize.name
+      prizeName: prize.name,
+      mode: mode
     };
 
     this._notify('SPIN_STARTED', this._pendingSpin);

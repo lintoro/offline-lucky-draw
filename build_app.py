@@ -12,7 +12,7 @@ with open('src/confetti.js', 'r', encoding='utf-8') as f:
 with open('src/masterVisualEngine.js', 'r', encoding='utf-8') as f:
     visual_code = f.read()
 
-with open('temp_fixed.html', 'r', encoding='utf-8') as f:
+with open('index.html', 'r', encoding='utf-8') as f:
     html = f.read()
 
 helpers_and_ui = """
@@ -71,7 +71,6 @@ helpers_and_ui = """
     var themeSelector = document.getElementById('theme-selector');
     var inputEventName = document.getElementById('input-event-name');
     var headerBrandTitle = document.getElementById('header-brand-title');
-    var stageModeIndicator = document.getElementById('stage-mode-indicator');
 
     var viewSetup = document.getElementById('view-setup');
     var viewStage = document.getElementById('view-stage');
@@ -372,16 +371,6 @@ helpers_and_ui = """
       }
 
       var curMode = state.getModeForCurrentPrize();
-      var modeLabels = {
-        'WINDOWED_WHEEL': '動態視窗輪盤',
-        'LOTTO_EGG': '氣壓式彩球抽獎機',
-        'SLOT_MACHINE': '復古拉霸輪軸',
-        'SPLIT_FLAP': '翻牌式機械看板',
-        'HYPERSPACE': '時空跳躍光斑'
-      };
-      if (stageModeIndicator) {
-        stageModeIndicator.textContent = '模式：' + (modeLabels[curMode] || '動態開獎');
-      }
       visualEngine.setMode(curMode);
 
       if (btnSpin) {
@@ -437,11 +426,26 @@ helpers_and_ui = """
       } else if (s.status === 'REVEALED') {
         if (winnerModal) winnerModal.classList.remove('active');
         confetti.stop();
-        state.continueSpin();
+        var nextSt = state.continueSpin();
         visualEngine.setCandidates(state.candidatePool);
         updateStageView();
+        if (nextSt === 'READY') {
+          setTimeout(function() {
+            triggerSpinAction();
+          }, 100);
+        }
       } else if (s.status === 'PARTIAL_FILLED') {
         state.finishDraw();
+        updateStageView();
+      }
+    }
+
+    function closeModalOnly() {
+      if (winnerModal) winnerModal.classList.remove('active');
+      confetti.stop();
+      if (state.getState().status === 'REVEALED') {
+        state.continueSpin();
+        visualEngine.setCandidates(state.candidatePool);
         updateStageView();
       }
     }
@@ -450,6 +454,13 @@ helpers_and_ui = """
     if (btnModalContinue) {
       btnModalContinue.onclick = function() {
         if (state.getState().status === 'REVEALED') triggerSpinAction();
+      };
+    }
+    var btnModalClose = document.getElementById('btn-modal-close');
+    if (btnModalClose) btnModalClose.onclick = closeModalOnly;
+    if (winnerModal) {
+      winnerModal.onclick = function(e) {
+        if (e.target === winnerModal) closeModalOnly();
       };
     }
 
@@ -567,16 +578,18 @@ css = re.sub(r'\s+', ' ', css)
 css = re.sub(r'\s*([{};:,>])\s*', r'\1', css)
 css = css.replace(';}', '}')
 
-proc = subprocess.Popen(['npx', 'terser', '--compress', '--mangle'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+proc = subprocess.Popen(['npx', 'terser', '--compress', 'passes=2,drop_console=true', '--mangle'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 out_js, err_js = proc.communicate(input=full_js)
 if proc.returncode != 0:
     raise Exception("Terser error: " + err_js)
 
 head_part = html[:style_m.start()]
 body_part = html[style_m.end():html.find('<script>')]
+body_part = re.sub(r'<!--.*?-->', '', body_part, flags=re.DOTALL)
 body_part = re.sub(r'>\s+<', '><', body_part)
+body_part = re.sub(r'\s{2,}', ' ', body_part)
 
-result_html = head_part + '<style>' + css.strip() + '</style>' + body_part + '<script>\n' + out_js.strip() + '\n</script>\n</body>\n</html>'
+result_html = head_part + '<style>' + css.strip() + '</style>' + body_part.strip() + '<script>\n' + out_js.strip() + '\n</script>\n</body>\n</html>'
 
 result_bytes = result_html.encode('utf-8')
 result_bytes = result_bytes.replace(b'\\ufeff', b'\\uFEFF')
