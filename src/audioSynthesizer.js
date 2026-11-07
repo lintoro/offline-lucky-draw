@@ -156,10 +156,11 @@
     try {
       var self = this;
       var notes = [
-        { freq: 523.25, time: 0.00, dur: 0.4 }, // C5
-        { freq: 659.25, time: 0.10, dur: 0.4 }, // E5
-        { freq: 783.99, time: 0.20, dur: 0.5 }, // G5
-        { freq: 1046.50, time: 0.32, dur: 1.2 }  // C6 (長音)
+        { freq: 523.25, time: 0.00, dur: 0.12, type: 'sine' },     // C5
+        { freq: 659.25, time: 0.10, dur: 0.12, type: 'sine' },     // E5
+        { freq: 783.99, time: 0.20, dur: 0.16, type: 'sine' },     // G5
+        { freq: 1046.50, time: 0.32, dur: 0.48, type: 'triangle' }, // C6 壓軸主音
+        { freq: 1318.51, time: 0.32, dur: 0.48, type: 'sine' }      // E6 燦爛高音和聲
       ];
 
       var baseTime = this.ctx.currentTime;
@@ -171,11 +172,11 @@
         var osc = self.ctx.createOscillator();
         var gain = self.ctx.createGain();
 
-        osc.type = 'sine';
+        osc.type = n.type || 'sine';
         osc.frequency.setValueAtTime(n.freq, startTime);
 
         gain.gain.setValueAtTime(0.001, startTime);
-        gain.gain.linearRampToValueAtTime(0.3, startTime + 0.04);
+        gain.gain.linearRampToValueAtTime(0.26, startTime + 0.03);
         gain.gain.exponentialRampToValueAtTime(0.001, stopTime);
 
         osc.connect(gain);

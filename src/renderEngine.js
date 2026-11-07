@@ -178,13 +178,13 @@
     // 指針位於頂部 3*PI/2 (270度)。目標扇區正中必須停在 3*PI/2
     var targetCenterAngle = (Math.PI * 1.5) - (targetIndex * sliceAngle + sliceAngle / 2);
     
-    // 加上額外旋轉圈數 (至少 5 圈)
+    // 加上額外旋轉圈數 (至少 6 圈)，計算順時針到達目標正中的角度差
     var extraRounds = 6 * Math.PI * 2;
-    var startAngle = this.currentAngle % (Math.PI * 2);
-    var finalAngle = startAngle + extraRounds + (targetCenterAngle - (startAngle % (Math.PI * 2)));
-    if (finalAngle <= startAngle + extraRounds) {
-      finalAngle += Math.PI * 2;
-    }
+    var curNorm = ((this.currentAngle % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+    var tgtNorm = ((targetCenterAngle % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+    var delta = tgtNorm - curNorm;
+    if (delta <= 0) delta += Math.PI * 2;
+    var finalAngle = this.currentAngle + extraRounds + delta;
 
     var startTime = performance.now();
     var lastTickSlice = -1;
