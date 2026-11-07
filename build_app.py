@@ -1,22 +1,21 @@
-import subprocess, os, re
+import re, subprocess, os
 
-def build():
-    with open('src/stateManager.js', 'r', encoding='utf-8') as f:
-        state_code = f.read()
+with open('src/stateManager.js', 'r', encoding='utf-8') as f:
+    state_code = f.read()
 
-    with open('src/audioSynthesizer.js', 'r', encoding='utf-8') as f:
-        audio_code = f.read()
+with open('src/audioSynthesizer.js', 'r', encoding='utf-8') as f:
+    audio_code = f.read()
 
-    with open('src/confetti.js', 'r', encoding='utf-8') as f:
-        confetti_code = f.read()
+with open('src/confetti.js', 'r', encoding='utf-8') as f:
+    confetti_code = f.read()
 
-    with open('src/masterVisualEngine.js', 'r', encoding='utf-8') as f:
-        visual_code = f.read()
+with open('src/masterVisualEngine.js', 'r', encoding='utf-8') as f:
+    visual_code = f.read()
 
-    with open('src/exporter.js', 'r', encoding='utf-8') as f:
-        export_code = f.read()
+with open('temp_fixed.html', 'r', encoding='utf-8') as f:
+    html = f.read()
 
-    ui_code = """
+helpers_and_ui = """
   function sanitizeCsvCell(val) {
     if (val === null || val === undefined) return '""';
     var str = String(val);
@@ -40,33 +39,23 @@ def build():
     return lines.join('\\r\\n');
   }
 
-  function downloadFile(content, fileName, mimeType) {
-    var blob = new Blob([content], { type: mimeType });
+  function downloadFile(content, name, mime) {
+    var blob = new Blob([content], { type: mime });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.style.display = 'none';
+    a.href = url; a.download = name; a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    setTimeout(function() {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
   }
 
   function escapeHtml(str) {
-    return String(str || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  function initApp() {
+  (function initApp() {
     var state = new StateManager({
-      eventName: '2026 年度盛典離線抽獎大會',
+      eventName: '年度慶典抽獎大會',
       theme: 'OBSIDIAN_GOLD',
       prizes: [
         { name: '特獎 (大獎)', totalQuota: 1 },
@@ -79,245 +68,355 @@ def build():
     var confetti = new ConfettiEngine(document.getElementById('confetti-canvas'));
     var visualEngine = new MasterVisualEngine(document.getElementById('stage-canvas'), audio);
 
+    var themeSelector = document.getElementById('theme-selector');
+    var inputEventName = document.getElementById('input-event-name');
+    var headerBrandTitle = document.getElementById('header-brand-title');
+    var stageModeIndicator = document.getElementById('stage-mode-indicator');
+
     var viewSetup = document.getElementById('view-setup');
     var viewStage = document.getElementById('view-stage');
-    var inputEventName = document.getElementById('input-event-name');
-    var selTheme = document.getElementById('select-theme');
     var inputCandidates = document.getElementById('input-candidates');
     var candidateBadge = document.getElementById('candidate-count-badge');
     var prizesList = document.getElementById('prizes-list');
     var btnAddPrize = document.getElementById('btn-add-prize');
     var selDrawOrder = document.getElementById('config-draw-order');
     var chkAllowDup = document.getElementById('config-allow-duplicates');
-    var inputMaxWin = document.getElementById('config-max-win');
-    var wrapMaxWin = document.getElementById('wrap-max-win');
+    var maxWinContainer = document.getElementById('max-win-container');
+    var inputMaxWinLimit = document.getElementById('config-max-win-limit');
     var chkAutoSwitch = document.getElementById('config-auto-switch');
-    var btnToStage = document.getElementById('btn-to-stage');
-    var btnSpin = document.getElementById('btn-spin');
+    var btnStartStage = document.getElementById('btn-start-stage');
+    var btnExportHtml = document.getElementById('btn-export-html');
     var btnEmergencyEdit = document.getElementById('btn-emergency-edit');
-    var btnExportCsv = document.getElementById('btn-export-csv');
-    var btnSelfClone = document.getElementById('btn-self-clone');
-    var btnFullscreen = document.getElementById('btn-fullscreen');
-    var stageTitle = document.getElementById('stage-title');
-    var stageRoundPill = document.getElementById('stage-round-pill');
-    var stageRemainingPill = document.getElementById('stage-remaining-pill');
-    var stageCandidatePill = document.getElementById('stage-candidate-pill');
-    var stageAnimBadge = document.getElementById('stage-anim-badge');
+    var btnSpin = document.getElementById('btn-spin');
+    var stageOrderTag = document.getElementById('stage-order-tag');
+    var stagePrizeName = document.getElementById('stage-prize-name');
+    var stageQuotaRemaining = document.getElementById('stage-quota-remaining');
+    var stageCandidatesRemaining = document.getElementById('stage-candidates-remaining');
+    var stageStatusHint = document.getElementById('stage-status-hint');
+    var historyCounter = document.getElementById('history-counter');
     var historyFeed = document.getElementById('history-feed');
-    var historyCount = document.getElementById('history-count');
-    var winnerModal = document.getElementById('winner-modal');
+    var btnExportCsv = document.getElementById('btn-export-csv');
+    var btnResetAll = document.getElementById('btn-reset-all');
+    var winnerModal = document.getElementById('winner-modal-overlay');
     var modalPrizeTag = document.getElementById('modal-prize-tag');
     var modalWinnerName = document.getElementById('modal-winner-name');
-    var btnModalNext = document.getElementById('btn-modal-next');
-    var dialogOverlay = document.getElementById('dialog-overlay');
-    var dialogTitle = document.getElementById('dialog-title');
-    var dialogMessage = document.getElementById('dialog-message');
-    var btnDialogCancel = document.getElementById('btn-dialog-cancel');
-    var btnDialogConfirm = document.getElementById('btn-dialog-confirm');
+    var btnModalContinue = document.getElementById('btn-modal-continue');
+    var fileDropzone = document.getElementById('file-dropzone');
+    var fileInput = document.getElementById('file-input');
+    var btnFullscreen = document.getElementById('btn-fullscreen-toggle');
 
-    var currentDialogCb = null;
-    function openDialog(opts) {
-      dialogTitle.textContent = opts.title || '系統提示';
-      dialogMessage.textContent = opts.message || '';
-      btnDialogCancel.style.display = opts.showCancel ? 'inline-block' : 'none';
-      btnDialogConfirm.textContent = opts.confirmText || '確認';
-      currentDialogCb = opts.onConfirm || null;
+    var btnLoadSample = document.getElementById('btn-load-sample');
+    var btnDedupNames = document.getElementById('btn-dedup-names');
+    var btnClearNames = document.getElementById('btn-clear-names');
+
+    var dialogOverlay = document.getElementById('dialog-modal-overlay');
+    var dialogTitle = document.getElementById('dialog-title');
+    var dialogMsg = document.getElementById('dialog-msg');
+    var dialogBtnCancel = document.getElementById('dialog-btn-cancel');
+    var dialogBtnConfirm = document.getElementById('dialog-btn-confirm');
+    var onDialogConfirmAction = null;
+
+    function openDialog(title, message, isConfirm, onConfirm) {
+      dialogTitle.textContent = title;
+      dialogMsg.textContent = message;
+      dialogBtnCancel.style.display = isConfirm ? 'inline-block' : 'none';
+      onDialogConfirmAction = onConfirm;
       dialogOverlay.classList.add('active');
     }
-
-    btnDialogConfirm.onclick = function() {
+    dialogBtnCancel.onclick = function() { dialogOverlay.classList.remove('active'); };
+    dialogBtnConfirm.onclick = function() {
       dialogOverlay.classList.remove('active');
-      if (typeof currentDialogCb === 'function') currentDialogCb();
-      currentDialogCb = null;
-    };
-    btnDialogCancel.onclick = function() {
-      dialogOverlay.classList.remove('active');
-      currentDialogCb = null;
+      if (typeof onDialogConfirmAction === 'function') onDialogConfirmAction();
     };
 
-    function applyTheme(theme) {
-      document.body.setAttribute('data-theme', theme);
-      state.setTheme(theme);
-      selTheme.value = theme;
+    if (themeSelector) {
+      themeSelector.onchange = function() {
+        var val = this.value;
+        document.body.setAttribute('data-theme', val);
+        state.setTheme(val);
+      };
     }
 
-    selTheme.onchange = function() {
-      applyTheme(selTheme.value);
-    };
+    if (inputEventName) {
+      inputEventName.oninput = function() {
+        var val = this.value.trim() || '年度慶典抽獎大會';
+        state.setEventName(val);
+        if (headerBrandTitle) headerBrandTitle.textContent = val;
+      };
+    }
 
-    inputEventName.oninput = function() {
-      state.setEventName(inputEventName.value.trim() || '純前端離線抽獎大會');
-    };
+    if (chkAllowDup) {
+      chkAllowDup.onchange = function() {
+        if (maxWinContainer) maxWinContainer.style.display = this.checked ? 'inline-flex' : 'none';
+        var limit = this.checked ? (parseInt(inputMaxWinLimit.value, 10) || 2) : 0;
+        state.updateConfig({ allowDuplicates: this.checked, maxWinLimit: limit });
+      };
+    }
+    if (inputMaxWinLimit) {
+      inputMaxWinLimit.oninput = function() {
+        var val = Math.max(1, parseInt(this.value, 10) || 2);
+        state.updateConfig({ maxWinLimit: val });
+      };
+    }
 
-    chkAllowDup.onchange = function() {
-      wrapMaxWin.style.display = chkAllowDup.checked ? 'inline-flex' : 'none';
-    };
+    if (btnFullscreen) {
+      btnFullscreen.onclick = function() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(function(){});
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen();
+        }
+      };
+    }
+
+    if (btnLoadSample) {
+      btnLoadSample.onclick = function() {
+        var sample = "陳冠宇\\n林雅婷\\n黃家豪\\n張庭瑄\\n李宗翰\\n王欣怡\\n吳柏毅\\n劉佳穎\\n蔡宗佑\\n鄭宇軒\\n許雅筑\\n謝政廷\\n宋詩涵\\n楊凱傑\\n潘品妤\\n周子豪\\n趙婉婷\\n徐家銘\\n孫瑋倫\\n何宜蓁\\n郭建志\\n羅詩婷\\n曾柏翰\\n邱美玲\\n蕭宇翔\\n梁雅雯\\n韓宗霖\\n唐若涵\\n馮偉哲\\n謝宛倫";
+        inputCandidates.value = sample;
+        state.setInputText(sample);
+        if (candidateBadge) candidateBadge.textContent = state.candidatePool.length + ' 人登記';
+      };
+    }
+
+    if (btnDedupNames) {
+      btnDedupNames.onclick = function() {
+        var names = parseCandidateText(inputCandidates.value);
+        var unique = Array.from(new Set(names));
+        inputCandidates.value = unique.join('\\n');
+        state.setInputText(inputCandidates.value);
+        if (candidateBadge) candidateBadge.textContent = unique.length + ' 人登記';
+        openDialog('名單清理完成', '已濾除重複人名，現有名冊共 ' + unique.length + ' 人。', false);
+      };
+    }
+
+    if (btnClearNames) {
+      btnClearNames.onclick = function() {
+        openDialog('清空確認', '確定要清空目前輸入的名單文字？', true, function() {
+          inputCandidates.value = '';
+          state.setInputText('');
+          if (candidateBadge) candidateBadge.textContent = '0 人登記';
+        });
+      };
+    }
 
     function renderPrizeInputs() {
+      if (!prizesList) return;
       prizesList.innerHTML = '';
-      var order = selDrawOrder.value;
-      state.config.prizes.forEach(function(p, i) {
+      var isBottomUp = state.config.drawOrder === 'BOTTOM_UP';
+      var totalPrizes = state.prizes.length;
+
+      state.prizes.forEach(function(p, idx) {
+        var orderNum = isBottomUp ? (totalPrizes - idx) : (idx + 1);
+        var isGrand = orderNum === totalPrizes;
+        var rankClass = isGrand ? 'prize-rank-pill grand' : 'prize-rank-pill';
+        var orderLabel = isGrand ? '★ 壓軸大獎' : ('第 ' + orderNum + ' 順位');
+
         var card = document.createElement('div');
         card.className = 'prize-card';
-
-        var orderLabel = '';
-        if (order === 'BOTTOM_UP') {
-          orderLabel = (i === state.config.prizes.length - 1) ? '壓軸大獎' : ('第 ' + (i + 1) + ' 順位');
-        } else {
-          orderLabel = (i === 0) ? '首抽大獎' : ('第 ' + (i + 1) + ' 順位');
-        }
-
         card.innerHTML = 
-          '<span class="prize-rank-pill">' + orderLabel + '</span>' +
-          '<input type="text" class="prize-name" value="' + escapeHtml(p.name) + '" placeholder="獎項名稱">' +
-          '<input type="number" class="prize-quota" min="1" value="' + (p.totalQuota || 1) + '" placeholder="名額">' +
+          '<div class="' + rankClass + '">' + orderLabel + '</div>' +
+          '<input type="text" value="' + escapeHtml(p.name) + '" placeholder="獎項名稱" data-id="' + p.id + '" class="p-name">' +
+          '<input type="number" min="1" value="' + p.totalQuota + '" data-id="' + p.id + '" class="p-quota" title="配額數量">' +
           '<div class="reorder-btns">' +
-            '<button type="button" class="btn-icon btn-move-up" ' + (i === 0 ? 'disabled style="opacity:0.2"' : '') + '>▲</button>' +
-            '<button type="button" class="btn-icon btn-move-down" ' + (i === state.config.prizes.length - 1 ? 'disabled style="opacity:0.2"' : '') + '>▼</button>' +
+            '<button class="btn-icon btn-move-up" data-idx="' + idx + '" title="順位前移" ' + (idx === 0 ? 'disabled style="opacity:0.2"' : '') + '>▲</button>' +
+            '<button class="btn-icon btn-move-down" data-idx="' + idx + '" title="順位後移" ' + (idx === totalPrizes - 1 ? 'disabled style="opacity:0.2"' : '') + '>▼</button>' +
           '</div>' +
-          '<button type="button" class="btn-icon btn-delete-prize" style="color:#ef4444;" ' + (state.config.prizes.length <= 1 ? 'disabled style="opacity:0.2"' : '') + '>✕</button>';
+          '<button class="btn-icon del btn-del-p" data-id="' + p.id + '" title="刪除獎項">✕</button>';
         prizesList.appendChild(card);
       });
       syncPrizeListeners();
     }
 
     function syncPrizeListeners() {
-      var cards = prizesList.querySelectorAll('.prize-card');
-      cards.forEach(function(c, i) {
-        var inputName = c.querySelector('.prize-name');
-        var inputQuota = c.querySelector('.prize-quota');
-        var btnUp = c.querySelector('.btn-move-up');
-        var btnDown = c.querySelector('.btn-move-down');
-        var btnDel = c.querySelector('.btn-delete-prize');
-
-        inputName.oninput = function() { state.config.prizes[i].name = inputName.value; };
-        inputQuota.oninput = function() { state.config.prizes[i].totalQuota = parseInt(inputQuota.value, 10) || 1; };
-        btnUp.onclick = function() { state.reorderPrize(i, i - 1); renderPrizeInputs(); };
-        btnDown.onclick = function() { state.reorderPrize(i, i + 1); renderPrizeInputs(); };
-        btnDel.onclick = function() {
-          if (state.config.prizes.length > 1) {
-            state.config.prizes.splice(i, 1);
-            renderPrizeInputs();
+      prizesList.querySelectorAll('.p-name').forEach(function(inp) {
+        inp.oninput = function() {
+          var id = this.getAttribute('data-id');
+          var p = state.prizes.find(function(item){ return item.id === id; });
+          if (p) { p.name = this.value; state.validate(); }
+        };
+      });
+      prizesList.querySelectorAll('.p-quota').forEach(function(inp) {
+        inp.oninput = function() {
+          var id = this.getAttribute('data-id');
+          var p = state.prizes.find(function(item){ return item.id === id; });
+          if (p) {
+            var val = Math.max(1, parseInt(this.value, 10) || 1);
+            p.totalQuota = val;
+            p.remainingQuota = val;
+            state.validate();
           }
+        };
+      });
+      prizesList.querySelectorAll('.btn-move-up').forEach(function(btn) {
+        btn.onclick = function() {
+          var idx = parseInt(this.getAttribute('data-idx'), 10);
+          state.movePrize(idx, idx - 1);
+          renderPrizeInputs();
+        };
+      });
+      prizesList.querySelectorAll('.btn-move-down').forEach(function(btn) {
+        btn.onclick = function() {
+          var idx = parseInt(this.getAttribute('data-idx'), 10);
+          state.movePrize(idx, idx + 1);
+          renderPrizeInputs();
+        };
+      });
+      prizesList.querySelectorAll('.btn-del-p').forEach(function(btn) {
+        btn.onclick = function() {
+          var id = this.getAttribute('data-id');
+          state.removePrize(id);
+          renderPrizeInputs();
         };
       });
     }
 
-    btnAddPrize.onclick = function() {
-      state.config.prizes.push({ name: '新獎項', totalQuota: 1 });
-      renderPrizeInputs();
-    };
-
-    selDrawOrder.onchange = function() {
-      state.setDrawOrder(selDrawOrder.value);
-      renderPrizeInputs();
-    };
-
-    inputCandidates.oninput = function() {
-      var list = parseCandidateText(inputCandidates.value);
-      candidateBadge.textContent = list.length + ' 人';
-    };
-
-    document.getElementById('btn-tool-trim').onclick = function() {
-      var list = parseCandidateText(inputCandidates.value);
-      inputCandidates.value = list.join('\\n');
-      candidateBadge.textContent = list.length + ' 人';
-    };
-    document.getElementById('btn-tool-dedup').onclick = function() {
-      var list = parseCandidateText(inputCandidates.value);
-      var set = Array.from(new Set(list));
-      inputCandidates.value = set.join('\\n');
-      candidateBadge.textContent = set.length + ' 人';
-    };
-    document.getElementById('btn-tool-mock50').onclick = function() {
-      var arr = [];
-      for (var k = 1; k <= 50; k++) arr.push('測試員工_' + (k < 10 ? '0' : '') + k);
-      inputCandidates.value = arr.join('\\n');
-      candidateBadge.textContent = arr.length + ' 人';
-    };
-
-    var dropzone = document.getElementById('file-dropzone');
-    var fileInput = document.getElementById('input-file-import');
-    dropzone.onclick = function() { fileInput.click(); };
-    fileInput.onchange = function(e) {
-      var file = e.target.files && e.target.files[0];
-      if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function(evt) {
-        inputCandidates.value = evt.target.result;
-        var list = parseCandidateText(inputCandidates.value);
-        candidateBadge.textContent = list.length + ' 人';
+    if (btnAddPrize) {
+      btnAddPrize.onclick = function() {
+        state.addPrize('獎項 ' + (state.prizes.length + 1), 1);
+        renderPrizeInputs();
       };
-      reader.readAsText(file);
-    };
+    }
 
-    btnToStage.onclick = function() {
-      try {
-        var names = parseCandidateText(inputCandidates.value);
-        state.config.allowDuplicates = chkAllowDup.checked;
-        state.config.maxWinLimit = chkAllowDup.checked ? (parseInt(inputMaxWin.value, 10) || 2) : 0;
-        state.config.autoSwitchTier = chkAutoSwitch.checked;
-        state.config.eventName = inputEventName.value.trim() || '純前端離線抽獎大會';
-        state.config.theme = selTheme.value;
-        state.initialize(names, state.config);
-        visualEngine.setCandidates(state.candidatePool);
+    if (selDrawOrder) {
+      selDrawOrder.onchange = function() {
+        state.updateConfig({ drawOrder: this.value });
+        renderPrizeInputs();
+      };
+    }
+
+    if (inputCandidates) {
+      inputCandidates.oninput = function() {
+        state.setInputText(this.value);
+        if (candidateBadge) candidateBadge.textContent = state.candidatePool.length + ' 人登記';
+      };
+    }
+
+    if (fileDropzone && fileInput) {
+      fileDropzone.onclick = function() { fileInput.click(); };
+      fileInput.onchange = function(e) {
+        var file = e.target.files && e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+          var content = evt.target.result || '';
+          inputCandidates.value = content;
+          state.setInputText(content);
+          if (candidateBadge) candidateBadge.textContent = state.candidatePool.length + ' 人登記';
+        };
+        reader.readAsText(file, 'utf-8');
+      };
+    }
+
+    if (chkAutoSwitch) {
+      chkAutoSwitch.onchange = function() { state.updateConfig({ autoSwitchTier: this.checked }); };
+    }
+
+    if (btnStartStage) {
+      btnStartStage.onclick = function() {
+        audio.init();
+        if (!state.validate()) {
+          openDialog('無法進入舞台', '請先輸入至少一位名單人員，並確保獎項配額大於 0。', false);
+          return;
+        }
         switchToStage();
-      } catch (err) {
-        openDialog({ title: '設定防呆阻擋', message: err.message });
-      }
-    };
+      };
+    }
 
     function switchToStage() {
       viewSetup.classList.remove('active');
       viewStage.classList.add('active');
+      if (btnEmergencyEdit) btnEmergencyEdit.classList.remove('hidden');
+      visualEngine.setCandidates(state.candidatePool);
       updateStageView();
+    }
+
+    if (btnEmergencyEdit) {
+      btnEmergencyEdit.onclick = function() {
+        openDialog('返回設定頁面', '確定返回設定頁面？目前未抽出的獎項進度將完整保留。', true, function() {
+          visualEngine.stop();
+          confetti.stop();
+          winnerModal.classList.remove('active');
+          state.emergencyEdit();
+          viewStage.classList.remove('active');
+          viewSetup.classList.add('active');
+          btnEmergencyEdit.classList.add('hidden');
+          renderPrizeInputs();
+        });
+      };
     }
 
     function updateStageView() {
       var cur = state.getCurrentPrize();
-      stageTitle.textContent = state.config.eventName + (cur ? (' ｜ ' + cur.name) : ' ｜ 抽獎大會已圓滿落幕');
-      var orderLabel = state.config.drawOrder === 'BOTTOM_UP' ? '循序漸進' : '大獎首抽';
-      stageRoundPill.textContent = '抽獎順序：' + orderLabel + ' ｜ 第 ' + (state.currentPrizeIndex + 1) + ' 輪 (共 ' + state.config.prizes.length + ' 輪)';
-      stageRemainingPill.innerHTML = '獎項剩餘名額：<strong>' + (cur ? cur.remainingQuota : 0) + '</strong>';
-      stageCandidatePill.innerHTML = '可抽候選總人數：<strong>' + state.candidatePool.length + '</strong>';
+      var s = state.getState();
+      var ordered = state.getOrderedPrizes();
 
-      var modeNames = {
+      if (candidateBadge) candidateBadge.textContent = s.candidatePool.length + ' 人登記';
+      if (historyCounter) historyCounter.textContent = s.history.length + ' 人獲獎';
+      if (stageCandidatesRemaining) stageCandidatesRemaining.textContent = s.candidatePool.length + ' 人';
+
+      var curIdx = -1;
+      if (cur) {
+        curIdx = ordered.findIndex(function(p){ return p.id === cur.id; });
+      }
+
+      if (cur) {
+        var roundNum = curIdx >= 0 ? (curIdx + 1) : 1;
+        var isGrand = roundNum === ordered.length;
+        if (stageOrderTag) stageOrderTag.textContent = (state.config.eventName || '大會抽獎') + ' ｜ 第 ' + roundNum + ' 輪 (共 ' + ordered.length + ' 輪)' + (isGrand ? ' ★ 壓軸大獎' : '');
+        if (stagePrizeName) stagePrizeName.textContent = cur.name;
+        if (stageQuotaRemaining) stageQuotaRemaining.textContent = cur.remainingQuota + ' / ' + cur.totalQuota;
+      } else {
+        if (stageOrderTag) stageOrderTag.textContent = (state.config.eventName || '大會抽獎') + ' ｜ 全部完成';
+        if (stagePrizeName) stagePrizeName.textContent = '恭喜所有獲獎幸運兒';
+        if (stageQuotaRemaining) stageQuotaRemaining.textContent = '全部抽滿';
+      }
+
+      var curMode = state.getModeForCurrentPrize();
+      var modeLabels = {
         'WINDOWED_WHEEL': '動態視窗輪盤',
         'LOTTO_EGG': '氣壓式彩球抽獎機',
         'SLOT_MACHINE': '復古拉霸輪軸',
         'SPLIT_FLAP': '翻牌式機械看板',
         'HYPERSPACE': '時空跳躍光斑'
       };
-      var nextMode = state.getPrizeAnimationMode(state.currentPrizeIndex);
-      stageAnimBadge.textContent = '開獎模式：' + (modeNames[nextMode] || '動態輪盤');
-      visualEngine.setMode(nextMode);
+      if (stageModeIndicator) {
+        stageModeIndicator.textContent = '模式：' + (modeLabels[curMode] || '動態開獎');
+      }
+      visualEngine.setMode(curMode);
 
-      if (state.status === 'READY') {
-        btnSpin.disabled = false;
-        btnSpin.textContent = '開始抽獎 (SPACE)';
-        btnSpin.className = 'btn-cta btn-gold-action';
-      } else if (state.status === 'SPINNING') {
-        btnSpin.disabled = true;
-        btnSpin.textContent = '開獎中...';
-      } else if (state.status === 'REVEALED') {
-        btnSpin.disabled = false;
-        btnSpin.textContent = '確認領獎並繼續 (SPACE)';
-      } else if (state.status === 'PARTIAL_FILLED') {
-        btnSpin.disabled = false;
-        btnSpin.textContent = '名冊抽空：結算大會';
-        btnSpin.className = 'btn-cta btn-secondary-action';
-      } else if (state.status === 'COMPLETED') {
-        btnSpin.disabled = true;
-        btnSpin.textContent = '全數獎項開出完畢';
+      if (btnSpin) {
+        btnSpin.className = 'btn-stage-spin';
+        if (s.status === 'READY') {
+          btnSpin.disabled = false;
+          btnSpin.textContent = '開始抽獎';
+          if (stageStatusHint) stageStatusHint.innerHTML = '輕按 <kbd>Space 空白鍵</kbd> 或點擊右側按鈕抽取';
+        } else if (s.status === 'SPINNING') {
+          btnSpin.disabled = true;
+          btnSpin.textContent = '搖獎中...';
+          if (stageStatusHint) stageStatusHint.textContent = '命運搖獎中，敬請全場期待...';
+        } else if (s.status === 'REVEALED') {
+          btnSpin.disabled = false;
+          btnSpin.textContent = '抽取下一位';
+          if (stageStatusHint) stageStatusHint.innerHTML = '輕按 <kbd>Space 空白鍵</kbd> 繼續抽取下一位';
+        } else if (s.status === 'PARTIAL_FILLED') {
+          btnSpin.disabled = false;
+          btnSpin.textContent = '名冊抽空：結算大會';
+          btnSpin.className = 'btn-stage-spin btn-secondary-action';
+          if (stageStatusHint) stageStatusHint.textContent = '候選名冊人數少於剩餘名額，點擊直接提前結算大會';
+        } else if (s.status === 'COMPLETED') {
+          btnSpin.disabled = true;
+          btnSpin.textContent = '全數開出完畢';
+          if (stageStatusHint) stageStatusHint.textContent = '恭喜所有得獎人！請點擊上方按鈕匯出中獎報表。';
+        }
       }
 
-      renderLiveFeed();
+      renderLiveFeed(s.history);
     }
 
     function triggerSpinAction() {
       audio.init();
-      var s = state.status;
-      if (s === 'READY') {
+      var s = state.getState();
+      if (s.status === 'READY') {
         try {
           var pending = state.startSpin();
           updateStageView();
@@ -325,36 +424,37 @@ def build():
             var record = state.revealWinner();
             audio.playFanfare();
             confetti.fire(75);
-            // 音畫共振慶祝 800ms，在第 800ms 樂音收斂時無縫滑出得獎彈窗
             visualEngine.celebrateWinner(record.winnerName, 800, function() {
-              modalPrizeTag.textContent = '恭喜榮獲 ' + record.prizeName;
-              modalWinnerName.textContent = record.winnerName;
-              winnerModal.classList.add('active');
+              if (modalPrizeTag) modalPrizeTag.textContent = '恭喜榮獲 ' + record.prizeName;
+              if (modalWinnerName) modalWinnerName.textContent = record.winnerName;
+              if (winnerModal) winnerModal.classList.add('active');
               updateStageView();
             });
           });
         } catch (err) {
-          console.warn(err);
+          openDialog('開獎阻擋', err.message, false);
         }
-      } else if (s === 'REVEALED') {
-        winnerModal.classList.remove('active');
+      } else if (s.status === 'REVEALED') {
+        if (winnerModal) winnerModal.classList.remove('active');
         confetti.stop();
         state.continueSpin();
         visualEngine.setCandidates(state.candidatePool);
         updateStageView();
-      } else if (s === 'PARTIAL_FILLED') {
+      } else if (s.status === 'PARTIAL_FILLED') {
         state.finishDraw();
         updateStageView();
       }
     }
 
-    btnSpin.onclick = triggerSpinAction;
-    btnModalNext.onclick = function() {
-      if (state.status === 'REVEALED') triggerSpinAction();
-    };
+    if (btnSpin) btnSpin.onclick = triggerSpinAction;
+    if (btnModalContinue) {
+      btnModalContinue.onclick = function() {
+        if (state.getState().status === 'REVEALED') triggerSpinAction();
+      };
+    }
 
     window.addEventListener('keydown', function(e) {
-      if (e.code === 'Space' && viewStage.classList.contains('active')) {
+      if (e.code === 'Space' && viewStage && viewStage.classList.contains('active')) {
         var activeTag = document.activeElement ? document.activeElement.tagName : '';
         if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
           e.preventDefault();
@@ -363,10 +463,14 @@ def build():
       }
     });
 
-    function renderLiveFeed() {
+    function renderLiveFeed(history) {
+      if (!historyFeed) return;
       historyFeed.innerHTML = '';
-      historyCount.textContent = state.history.length + ' 人';
-      state.history.slice().reverse().forEach(function(rec) {
+      if (!history || history.length === 0) {
+        historyFeed.innerHTML = '<div style="color:var(--text-muted); text-align:center; margin-top:40px; font-size:0.85rem;">大會即將開獎，拭目以待</div>';
+        return;
+      }
+      history.slice().reverse().forEach(function(rec) {
         var item = document.createElement('div');
         item.className = 'history-item';
         item.innerHTML = 
@@ -379,120 +483,111 @@ def build():
       });
     }
 
-    btnEmergencyEdit.onclick = function() {
-      openDialog({
-        title: '緊急編輯返回',
-        message: '確認要返回設定頁面嗎？已抽出的中獎紀錄將會完整保留，未抽出的獎項可隨時調整。',
-        showCancel: true,
-        confirmText: '確認返回',
-        onConfirm: function() {
+    if (btnExportCsv) {
+      btnExportCsv.onclick = function() {
+        var history = state.getState().history;
+        if (history.length === 0) {
+          openDialog('尚無中獎紀錄', '目前尚未抽出任何中獎者，無法匯出報表。', false);
+          return;
+        }
+        var csv = generateCsv(history);
+        downloadFile(csv, (state.config.eventName || '大會抽獎結果') + '_' + Date.now() + '.csv', 'text/csv;charset=utf-8;');
+      };
+    }
+
+    if (btnExportHtml) {
+      btnExportHtml.onclick = function() {
+        try {
+          var bundle = state.exportBundleBase64();
+          var rawHtml = document.documentElement.outerHTML;
+          var newHtml = rawHtml.replace(/<script id="__INITIAL_BUNDLE__"[^>]*>[\s\S]*?<\/script>/, '<script id="__INITIAL_BUNDLE__" type="text/plain">' + bundle + '<\\/script>');
+          downloadFile(newHtml, 'OfflineLuckyDraw_Archive_' + Date.now() + '.html', 'text/html;charset=utf-8;');
+        } catch (e) {
+          openDialog('自克隆失敗', e.message, false);
+        }
+      };
+    }
+
+    if (btnResetAll) {
+      btnResetAll.onclick = function() {
+        openDialog('重置大會確認', '確定要重置整個抽獎大會？所有歷史紀錄將被抹除。', true, function() {
           visualEngine.stop();
           confetti.stop();
-          state.emergencyEdit();
+          if (winnerModal) winnerModal.classList.remove('active');
+          state.reset();
           viewStage.classList.remove('active');
           viewSetup.classList.add('active');
+          if (btnEmergencyEdit) btnEmergencyEdit.classList.add('hidden');
           renderPrizeInputs();
-        }
-      });
-    };
-
-    btnExportCsv.onclick = function() {
-      if (state.history.length === 0) {
-        openDialog({ title: '尚無中獎紀錄', message: '目前尚未抽出任何中獎者，無法匯出報表。' });
-        return;
-      }
-      var csv = generateCsv(state.history);
-      downloadFile(csv, (state.config.eventName || '抽獎結果') + '_' + Date.now() + '.csv', 'text/csv;charset=utf-8;');
-    };
-
-    btnSelfClone.onclick = function() {
-      try {
-        var bundle = state.exportBundle();
-        var rawHtml = document.documentElement.outerHTML;
-        var newHtml = rawHtml.replace(/<script id="__INITIAL_BUNDLE__"[^>]*>[\s\S]*?<\/script>/, '<script id="__INITIAL_BUNDLE__" type="application/json">' + bundle + '<\\/script>');
-        downloadFile(newHtml, 'OfflineLuckyDraw_Archive_' + Date.now() + '.html', 'text/html;charset=utf-8;');
-      } catch (e) {
-        openDialog({ title: '自克隆封裝失敗', message: e.message });
-      }
-    };
-
-    btnFullscreen.onclick = function() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(function() {});
-      } else {
-        document.exitFullscreen().catch(function() {});
-      }
-    };
-
-    applyTheme(state.config.theme);
-    renderPrizeInputs();
-    candidateBadge.textContent = '0 人';
-
-    var anchor = document.getElementById('__INITIAL_BUNDLE__');
-    if (anchor && anchor.textContent && anchor.textContent.trim()) {
-      try {
-        state.importBundle(anchor.textContent.trim());
-        inputCandidates.value = state.candidates.join('\\n');
-        candidateBadge.textContent = state.candidates.length + ' 人';
-        inputEventName.value = state.config.eventName;
-        applyTheme(state.config.theme);
-        renderPrizeInputs();
-        if (state.history.length > 0) switchToStage();
-      } catch (err) {
-        console.warn('自克隆還原失敗:', err);
-      }
+        });
+      };
     }
-  }
 
-  window.addEventListener('DOMContentLoaded', initApp);
+    state.subscribe(function(eventName, newState) {
+      if (newState && newState.candidatePool && candidateBadge) {
+        candidateBadge.textContent = newState.candidatePool.length + ' 人登記';
+      }
+      if (newState && newState.history && historyCounter) {
+        historyCounter.textContent = newState.history.length + ' 人獲獎';
+      }
+      if (viewStage && viewStage.classList.contains('active')) {
+        updateStageView();
+      }
+    });
+
+    var bundleScript = document.getElementById('__INITIAL_BUNDLE__');
+    if (bundleScript && bundleScript.textContent.trim().length > 0) {
+      state.importBundleBase64(bundleScript.textContent.trim());
+      if (inputCandidates) inputCandidates.value = state.rawInputText;
+      if (themeSelector) themeSelector.value = state.config.theme;
+      document.body.setAttribute('data-theme', state.config.theme);
+      if (inputEventName) inputEventName.value = state.config.eventName;
+      if (headerBrandTitle) headerBrandTitle.textContent = state.config.eventName;
+      renderPrizeInputs();
+      if (state.history.length > 0) switchToStage();
+    } else {
+      renderPrizeInputs();
+      if (themeSelector) document.body.setAttribute('data-theme', themeSelector.value);
+    }
+  })();
 """
 
-    full_js = "\n\n".join([
-        state_code,
-        audio_code,
-        confetti_code,
-        visual_code,
-        ui_code
-    ])
+full_js = "\n\n".join([
+    state_code,
+    audio_code,
+    confetti_code,
+    visual_code,
+    helpers_and_ui
+])
 
-    with open('index.html', 'r', encoding='utf-8') as f:
-        html = f.read()
+style_m = re.search(r'<style>(.*?)</style>', html, re.DOTALL)
+css = style_m.group(1)
+css = re.sub(r'/\*.*?\*/', '', css, flags=re.DOTALL)
+css = re.sub(r'\s+', ' ', css)
+css = re.sub(r'\s*([{};:,>])\s*', r'\1', css)
+css = css.replace(';}', '}')
 
-    style_m = re.search(r'<style>(.*?)</style>', html, re.DOTALL)
-    css = style_m.group(1)
+proc = subprocess.Popen(['npx', 'terser', '--compress', '--mangle'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+out_js, err_js = proc.communicate(input=full_js)
+if proc.returncode != 0:
+    raise Exception("Terser error: " + err_js)
 
-    # Minify CSS
-    css = re.sub(r'/\*.*?\*/', '', css, flags=re.DOTALL)
-    css = re.sub(r'\s+', ' ', css)
-    css = re.sub(r'\s*([{};:,>])\s*', r'\1', css)
-    css = css.replace(';}', '}')
+head_part = html[:style_m.start()]
+body_part = html[style_m.end():html.find('<script>')]
+body_part = re.sub(r'>\s+<', '><', body_part)
 
-    # Minify JS with terser
-    proc = subprocess.Popen(['npx', 'terser', '--compress'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    out_js, err_js = proc.communicate(input=full_js)
-    if proc.returncode != 0:
-        raise Exception("Terser error: " + err_js)
+result_html = head_part + '<style>' + css.strip() + '</style>' + body_part + '<script>\n' + out_js.strip() + '\n</script>\n</body>\n</html>'
 
-    # Assemble HTML
-    head_part = html[:style_m.start()]
-    body_part = html[style_m.end():html.find('<script>')]
-    body_part = re.sub(r'>\s+<', '><', body_part)
+result_bytes = result_html.encode('utf-8')
+result_bytes = result_bytes.replace(b'\\ufeff', b'\\uFEFF')
 
-    result_html = head_part + '<style>' + css.strip() + '</style>' + body_part + '<script>\n' + out_js.strip() + '\n</script>\n</body>\n</html>'
+with open('index.html', 'wb') as f:
+    f.write(result_bytes)
 
-    # Binary check and fix BOM representation
-    result_bytes = result_html.encode('utf-8')
-    result_bytes = result_bytes.replace(b'\\ufeff', b'\\uFEFF')
+sz = len(result_bytes)
+print(f"Build complete! index.html size: {sz} bytes ({sz / 1024:.2f} KB)")
+if sz <= 65 * 1024:
+    print("PASS: Size <= 65 KB budget")
+else:
+    print(f"OVER BUDGET by {sz - 65 * 1024} bytes")
 
-    with open('index.html', 'wb') as f:
-        f.write(result_bytes)
-
-    sz = len(result_bytes)
-    print(f"Build complete! index.html size: {sz} bytes ({sz / 1024:.2f} KB)")
-    if sz <= 65 * 1024:
-        print("PASS: Size <= 65 KB budget")
-    else:
-        print("FAIL: Size exceeds 65 KB budget")
-
-if __name__ == '__main__':
-    build()
