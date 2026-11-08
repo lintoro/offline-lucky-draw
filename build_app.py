@@ -144,6 +144,8 @@ helpers_and_ui = r"""
     var btnCloseFeed = document.getElementById('btn-close-feed');
     var stageFeedBox = document.getElementById('stage-feed-box');
     var historyCounterBadge = document.getElementById('history-counter-badge');
+    var stageBatchHud = document.getElementById('stage-batch-hud');
+    var stageBatchHudText = document.getElementById('stage-batch-hud-text');
 
     if (btnToggleFeed && stageFeedBox) {
       btnToggleFeed.onclick = function() {
@@ -539,15 +541,22 @@ helpers_and_ui = r"""
             btnSpin.disabled = true;
             btnSpin.textContent = '請先設定抽獎模式';
             if (stageStatusHint) stageStatusHint.innerHTML = '請在右側下拉選單選擇「一般模式」或「全開模式」以開始抽獎';
+            if (stageBatchHud) stageBatchHud.classList.add('hidden');
           } else if (selectedMode === 'BATCH_ALL') {
             btnSpin.disabled = false;
             var batchCount = cur ? Math.min(cur.remainingQuota, s.candidatePool.length) : 0;
+            btnSpin.className = 'btn-stage-spin btn-stage-spin-batch';
             btnSpin.textContent = '全開抽獎 (' + batchCount + '名)';
-            if (stageStatusHint) stageStatusHint.innerHTML = '全開模式就緒！輕按 <kbd>Space 空白鍵</kbd> 或點擊按鈕一次抽出 <strong>' + batchCount + '</strong> 位幸運兒';
+            if (stageStatusHint) stageStatusHint.innerHTML = '⚡ 全開模式就緒！輕按 <kbd>Space 空白鍵</kbd> 或點擊按鈕一次抽出 <strong>' + batchCount + '</strong> 位幸運兒';
+            if (stageBatchHud && batchCount > 1) {
+              stageBatchHud.classList.remove('hidden');
+              if (stageBatchHudText) stageBatchHudText.textContent = '⚡ 全開模式 ｜ 本輪將抽出 ' + batchCount + ' 位得獎人';
+            }
           } else {
             btnSpin.disabled = false;
             btnSpin.textContent = '開始抽獎 (1名)';
-            if (stageStatusHint) stageStatusHint.innerHTML = '一般模式就緒！輕按 <kbd>Space 空白鍵</kbd> 或點擊按鈕抽取一位';
+            if (stageStatusHint) stageStatusHint.innerHTML = '🎲 一般模式就緒！輕按 <kbd>Space 空白鍵</kbd> 或點擊按鈕抽取一位';
+            if (stageBatchHud) stageBatchHud.classList.add('hidden');
           }
         } else if (s.status === 'SPINNING') {
           btnSpin.disabled = true;
@@ -557,11 +566,13 @@ helpers_and_ui = r"""
           btnSpin.disabled = false;
           btnSpin.textContent = '抽取下一位';
           if (stageStatusHint) stageStatusHint.innerHTML = '輕按 <kbd>Space 空白鍵</kbd> 繼續進行下一抽';
+          if (stageBatchHud) stageBatchHud.classList.add('hidden');
         } else if (s.status === 'PARTIAL_FILLED') {
           btnSpin.disabled = false;
           btnSpin.textContent = '名冊抽空：結算大會';
           btnSpin.className = 'btn-stage-spin btn-secondary-action';
           if (stageStatusHint) stageStatusHint.textContent = '候選名冊人數少於剩餘名額，點擊直接提前結算大會';
+          if (stageBatchHud) stageBatchHud.classList.add('hidden');
         } else if (s.status === 'COMPLETED') {
           btnSpin.disabled = true;
           btnSpin.textContent = '全數開出完畢';
@@ -569,6 +580,7 @@ helpers_and_ui = r"""
           if (chkLockBatchMode) chkLockBatchMode.checked = false;
           if (selBatchMode) selBatchMode.value = '';
           if (batchModeDesc) batchModeDesc.textContent = '全場抽獎已圓滿結束';
+          if (stageBatchHud) stageBatchHud.classList.add('hidden');
         }
       }
 
@@ -590,7 +602,11 @@ helpers_and_ui = r"""
           if (selectedMode === 'BATCH_ALL') {
             var pending = state.startBatchSpin();
             updateStageView();
-            var topName = pending.winnerName + (pending.winners.length > 1 ? ' 等 ' + pending.winners.length + ' 位' : '');
+            var topName = pending.winnerName; // 嚴格保持純姓名，100% 杜絕名牌文字出血！
+            if (stageBatchHud) {
+              stageBatchHud.classList.remove('hidden');
+              if (stageBatchHudText) stageBatchHudText.textContent = '⚡ 全開模式 ｜ 同時誕生 ' + pending.winners.length + ' 位幸運得主';
+            }
             visualEngine.spinTo(pending.mode, pending.winnerIndex, topName, state.config.spinDurationMs, function() {
               var records = state.revealBatchWinners();
               audio.playBatchCelebration();
@@ -600,6 +616,7 @@ helpers_and_ui = r"""
                 if (modalPrizeTag) modalPrizeTag.textContent = '恭喜榮獲 ' + pending.prizeName + ' ｜ 全開 ' + records.length + ' 名';
                 renderModalWinners(records);
                 if (winnerModal) winnerModal.classList.add('active');
+                if (stageBatchHud) stageBatchHud.classList.add('hidden');
                 updateStageView();
               });
             });

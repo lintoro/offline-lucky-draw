@@ -1299,7 +1299,7 @@
       if (typeof onDone === 'function') onDone();
       return;
     }
-    var topName = (winners && winners.length > 0) ? winners[0] + ' 等 ' + winners.length + ' 位' : '全開中獎';
+    var topName = (winners && winners.length > 0) ? winners[0] : '中獎人';
     var startTime = performance.now();
 
     function batchStep(now) {
