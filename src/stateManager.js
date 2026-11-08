@@ -113,7 +113,8 @@
       autoSwitchTier: opts.config && typeof opts.config.autoSwitchTier === 'boolean' ? opts.config.autoSwitchTier : true,
       drawOrder: opts.config && opts.config.drawOrder ? opts.config.drawOrder : 'BOTTOM_UP', // 'BOTTOM_UP' (小獎至大獎) | 'TOP_DOWN' (大獎至小獎)
       currentPrizeId: opts.config && opts.config.currentPrizeId ? opts.config.currentPrizeId : '',
-      spinDurationMs: opts.config && typeof opts.config.spinDurationMs === 'number' ? opts.config.spinDurationMs : 4000
+      spinDurationMs: opts.config && typeof opts.config.spinDurationMs === 'number' ? opts.config.spinDurationMs : 4000,
+      aspectRatio: (opts.config && opts.config.aspectRatio === '9:16') ? '9:16' : '16:9'
     };
 
     // 每人累計中獎次數追蹤 (姓名 -> 次數)
@@ -309,8 +310,21 @@
     if (typeof partial.spinDurationMs === 'number' && partial.spinDurationMs > 0) {
       this.config.spinDurationMs = partial.spinDurationMs;
     }
+    if (partial.aspectRatio === '16:9' || partial.aspectRatio === '9:16') {
+      this.config.aspectRatio = partial.aspectRatio;
+    }
     this.validate();
     this._notify('CONFIG_UPDATED');
+  };
+
+  // 切換 16:9 寬螢幕 / 9:16 手機直屏比例
+  StateManager.prototype.setAspectRatio = function (ratio) {
+    var val = (ratio === '9:16') ? '9:16' : '16:9';
+    if (this.config.aspectRatio !== val) {
+      this.config.aspectRatio = val;
+      this._notify('ASPECT_RATIO_CHANGED', val);
+      this._notify('CONFIG_UPDATED');
+    }
   };
 
   // 驗證狀態機轉移條件 (SETUP <-> READY)

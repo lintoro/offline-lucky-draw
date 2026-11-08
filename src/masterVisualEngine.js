@@ -83,14 +83,20 @@
     }
   }
 
-  function MasterVisualEngine(canvasElement, audioSynthesizer, initialTheme) {
+  function MasterVisualEngine(canvasElement, audioSynthesizer, initialTheme, initialAspect) {
     this.canvas = canvasElement || null;
     this.ctx = canvasElement && canvasElement.getContext ? canvasElement.getContext('2d') : null;
     this.audio = audioSynthesizer || null;
     this.theme = ENGINE_THEMES[initialTheme] ? initialTheme : 'OBSIDIAN_GOLD';
 
-    this.logicalW = 640;
-    this.logicalH = 480;
+    this.aspectRatio = (initialAspect === '9:16') ? '9:16' : '16:9';
+    if (this.aspectRatio === '9:16') {
+      this.logicalW = 360;
+      this.logicalH = 640;
+    } else {
+      this.logicalW = 640;
+      this.logicalH = 480;
+    }
     this.dpr = 1;
 
     this.candidates = [];
@@ -112,24 +118,46 @@
     this.lottoBalls = [];
     this.stars = [];
 
-    this._syncHiDPI();
+    this._syncHiDPI(true);
   }
+
+  /**
+   * 切換 16:9 寬螢幕 / 9:16 手機直屏
+   */
+  MasterVisualEngine.prototype.setAspectRatio = function (ratio) {
+    var val = (ratio === '9:16') ? '9:16' : '16:9';
+    if (this.aspectRatio !== val) {
+      this.aspectRatio = val;
+      if (val === '9:16') {
+        this.logicalW = 360;
+        this.logicalH = 640;
+      } else {
+        this.logicalW = 640;
+        this.logicalH = 480;
+      }
+      this._syncHiDPI(true);
+      if (!this.isSpinning) {
+        this.renderStatic();
+      }
+    }
+  };
 
   /**
    * 確保主舞台 Canvas 在 Retina 螢幕上 100% 向量級銳利度
    */
-  MasterVisualEngine.prototype._syncHiDPI = function () {
+  MasterVisualEngine.prototype._syncHiDPI = function (force) {
     if (!this.canvas) return;
     var dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? Math.min(window.devicePixelRatio, 2.5) : 1;
     this.dpr = dpr;
-    if (this.canvas.style && dpr !== 1) {
-      var targetW = Math.round(this.logicalW * dpr);
-      var targetH = Math.round(this.logicalH * dpr);
-      if (this.canvas.width !== targetW || this.canvas.height !== targetH) {
-        this.canvas.width = targetW;
-        this.canvas.height = targetH;
+    var targetW = Math.round(this.logicalW * dpr);
+    var targetH = Math.round(this.logicalH * dpr);
+    if (force || this.canvas.width !== targetW || this.canvas.height !== targetH) {
+      this.canvas.width = targetW;
+      this.canvas.height = targetH;
+      if (this.canvas.style) {
         this.canvas.style.width = this.logicalW + 'px';
         this.canvas.style.height = this.logicalH + 'px';
+        this.canvas.style.aspectRatio = (this.aspectRatio === '9:16') ? '9 / 16' : '4 / 3';
       }
     }
   };
@@ -140,7 +168,7 @@
     var ctx = this.ctx;
     ctx.save();
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    if (this.dpr !== 1 && this.canvas.style) {
+    if (this.dpr !== 1) {
       ctx.scale(this.dpr, this.dpr);
     }
     return ctx;
@@ -204,15 +232,16 @@
     var ctx = this._beginFrame();
     if (!ctx) return;
     var w = this.logicalW, h = this.logicalH;
-    var cx = w / 2, cy = h / 2 - 10;
+    var isPortrait = (this.aspectRatio === '9:16');
+    var cx = w / 2, cy = isPortrait ? (h / 2 - 35) : (h / 2 - 10);
     var tc = this._getThemeColors();
     offset = offset || 0;
     pulseScale = pulseScale || 1;
 
-    var cardW = 160;
-    var cardH = 144;
-    var cardGap = 16;
-    var stride = cardW + cardGap; // 176
+    var cardW = isPortrait ? 120 : 160;
+    var cardH = isPortrait ? 116 : 144;
+    var cardGap = isPortrait ? 12 : 16;
+    var stride = cardW + cardGap;
 
     var strip = customStrip || this.ribbonStrip;
     if (!strip || strip.length === 0) {
@@ -311,7 +340,7 @@
       // 候選人姓名（100% 垂直置中於名牌視覺中心 cy+8，避開任何邊線）
       var nameStr = (isTargetCard && winnerName) ? winnerName : strip[i];
       ctx.fillStyle = isTargetCard ? '#ffffff' : (isCenterCard ? '#ffffff' : '#cbd5e1');
-      ctx.font = isTargetCard ? 'bold 25px sans-serif' : 'bold 22px sans-serif';
+      ctx.font = isTargetCard ? (isPortrait ? 'bold 20px sans-serif' : 'bold 25px sans-serif') : (isPortrait ? 'bold 17px sans-serif' : 'bold 22px sans-serif');
       ctx.fillText(nameStr, 0, 8);
 
       // 底部稀有度光條
@@ -323,17 +352,18 @@
     }
 
     // 3. 左右深邃光學暗角遮罩
-    var leftVig = ctx.createLinearGradient(18, 0, 140, 0);
+    var vigW = isPortrait ? 60 : 125;
+    var leftVig = ctx.createLinearGradient(18, 0, 18 + vigW, 0);
     leftVig.addColorStop(0, tc.panelBg);
     leftVig.addColorStop(1, 'transparent');
     ctx.fillStyle = leftVig;
-    ctx.fillRect(18, trackY, 125, trackH);
+    ctx.fillRect(18, trackY, vigW, trackH);
 
-    var rightVig = ctx.createLinearGradient(w - 140, 0, w - 18, 0);
+    var rightVig = ctx.createLinearGradient(w - 18 - vigW, 0, w - 18, 0);
     rightVig.addColorStop(0, 'transparent');
     rightVig.addColorStop(1, tc.panelBg);
     ctx.fillStyle = rightVig;
-    ctx.fillRect(w - 143, trackY, 125, trackH);
+    ctx.fillRect(w - 18 - vigW, trackY, vigW, trackH);
 
     ctx.restore();
 
@@ -375,9 +405,9 @@
 
     // 底部狀態銘牌
     ctx.fillStyle = tc.light;
-    ctx.font = 'bold 13px sans-serif';
+    ctx.font = isPortrait ? 'bold 11px sans-serif' : 'bold 13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(isRevealed ? '★ 目標鎖定完畢：恭喜幸運得主 ★' : '◈ 光學全景開箱軌道 — 準心鎖定正中央名牌 ◈', cx, h - 28);
+    ctx.fillText(isRevealed ? '★ 目標鎖定完畢：恭喜幸運得主 ★' : '◈ 光學全景開箱軌道 — 準心鎖定正中央名牌 ◈', cx, isPortrait ? (cy + cardH / 2 + 52) : (h - 28));
 
     this._endFrame();
   };
@@ -573,15 +603,16 @@
     var ctx = this._beginFrame();
     if (!ctx) return;
     var w = this.logicalW, h = this.logicalH;
-    var cx = w / 2, cy = 195, R = 128;
+    var isPortrait = (this.aspectRatio === '9:16');
+    var cx = w / 2, cy = isPortrait ? 260 : 195, R = isPortrait ? 115 : 128;
     var tc = this._getThemeColors();
     if (this.lottoBalls.length === 0) this._initLottoBalls();
     this._drawLottoMachineChamber(ctx, cx, cy, R, false, 0);
 
     ctx.fillStyle = tc.light;
-    ctx.font = 'bold 14px sans-serif';
+    ctx.font = isPortrait ? 'bold 12px sans-serif' : 'bold 14px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('◈ 雙渦輪氣壓樂透搖獎艙 — 待命啟動 ◈', cx, h - 22);
+    ctx.fillText('◈ 雙渦輪氣壓樂透搖獎艙 — 待命啟動 ◈', cx, isPortrait ? (cy + R + 55) : (h - 22));
     this._endFrame();
   };
 
@@ -589,16 +620,17 @@
     var ctx = this._beginFrame();
     if (!ctx) return;
     var w = this.logicalW, h = this.logicalH;
-    var cx = w / 2, cy = 195, R = 128;
+    var isPortrait = (this.aspectRatio === '9:16');
+    var cx = w / 2, cy = isPortrait ? 260 : 195, R = isPortrait ? 115 : 128;
     var tc = this._getThemeColors();
     this._drawLottoMachineChamber(ctx, cx, cy, R, false, 0);
 
     pulseScale = pulseScale || 1;
     ctx.save();
-    ctx.translate(cx, h / 2 + 15);
+    ctx.translate(cx, isPortrait ? 260 : (h / 2 + 15));
     ctx.scale(pulseScale, pulseScale);
 
-    var pw = 360, ph = 124;
+    var pw = isPortrait ? 290 : 360, ph = isPortrait ? 114 : 124;
     var plaqueGrad = ctx.createLinearGradient(-pw / 2, -ph / 2, pw / 2, ph / 2);
     plaqueGrad.addColorStop(0, tc.chassisTop);
     plaqueGrad.addColorStop(0.5, '#1e1b18');
@@ -644,10 +676,13 @@
     var ctx = this._beginFrame();
     if (!ctx) return;
     var w = this.logicalW, h = this.logicalH;
-    var cx = w / 2 - 18, cy = h / 2 + 12;
+    var isPortrait = (this.aspectRatio === '9:16');
+    var slotScale = isPortrait ? 0.72 : 1;
+    var cx = isPortrait ? (w / 2 - 14) : (w / 2 - 18);
+    var cy = isPortrait ? (h / 2 - 10) : (h / 2 + 12);
     var tc = this._getThemeColors();
 
-    pulseScale = pulseScale || 1;
+    pulseScale = (pulseScale || 1) * slotScale;
     slotPixelOffset = slotPixelOffset || 0;
     bulbPhase = (typeof bulbPhase === 'number') ? bulbPhase : 0;
     leverProgress = (typeof leverProgress === 'number') ? leverProgress : 0;
@@ -792,7 +827,7 @@
 
     ctx.save();
     safeRoundRect(ctx, winLeft, winTop, winW, winH, 12);
-    ctx.clip();
+    if (typeof ctx.clip === 'function') ctx.clip();
 
     // 滾輪底艙
     ctx.fillStyle = '#06070b';
@@ -965,9 +1000,11 @@
     var ctx = this._beginFrame();
     if (!ctx) return;
     var w = this.logicalW, h = this.logicalH;
-    var cx = w / 2, cy = h / 2;
+    var isPortrait = (this.aspectRatio === '9:16');
+    var flapScale = isPortrait ? 0.72 : 1;
+    var cx = w / 2, cy = isPortrait ? (h / 2 - 20) : (h / 2);
     var tc = this._getThemeColors();
-    pulseScale = pulseScale || 1;
+    pulseScale = (pulseScale || 1) * flapScale;
     progressRatio = isLocked ? 1 : (progressRatio || 0);
 
     ctx.save();
@@ -1094,9 +1131,11 @@
 
   MasterVisualEngine.prototype._renderHyperspaceCore = function (ctx, targetName, pulseScale, isLocked, gyroPhase, drawWarpStreaks, warpSpeed) {
     var w = this.logicalW, h = this.logicalH;
-    var cx = w / 2, cy = h / 2;
+    var isPortrait = (this.aspectRatio === '9:16');
+    var hyperScale = isPortrait ? 0.74 : 1;
+    var cx = w / 2, cy = isPortrait ? (h / 2 - 15) : (h / 2);
     var tc = this._getThemeColors();
-    pulseScale = pulseScale || 1;
+    pulseScale = (pulseScale || 1) * hyperScale;
     gyroPhase = gyroPhase || 0;
 
     // 1. 深空引力場背景
@@ -1362,7 +1401,8 @@
       this.animId = requestAnimationFrame(function stepLotto(now) {
         if (!self.isSpinning) return;
         var p = Math.min(1, (now - t0) / durationMs);
-        var cx = self.logicalW / 2, cy = 195, R = 128;
+        var isPortrait = (self.aspectRatio === '9:16');
+        var cx = self.logicalW / 2, cy = isPortrait ? 260 : 195, R = isPortrait ? 115 : 128;
 
         var speedScale = 2.0 * (1 - easeOutQuint(p)) + 0.25;
         for (var i = 0; i < self.lottoBalls.length; i++) {

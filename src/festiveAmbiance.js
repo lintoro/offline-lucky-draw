@@ -165,6 +165,11 @@
     this._initScene();
   };
 
+  FestiveAmbiance.prototype.setAspectRatio = function (ratio) {
+    this.aspectRatio = (ratio === '9:16') ? '9:16' : '16:9';
+    this.resize();
+  };
+
   FestiveAmbiance.prototype.resize = function () {
     if (!this.canvas) return;
     if (this._syncResolution(true)) {

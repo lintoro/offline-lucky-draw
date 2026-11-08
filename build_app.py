@@ -110,6 +110,31 @@ helpers_and_ui = r"""
     var fileDropzone = document.getElementById('file-dropzone');
     var fileInput = document.getElementById('file-input');
     var btnFullscreen = document.getElementById('btn-fullscreen-toggle');
+    var btnAspectToggle = document.getElementById('btn-aspect-toggle');
+
+    function applyAspectRatio(ratio) {
+      var isPortrait = (ratio === '9:16');
+      var val = isPortrait ? '9:16' : '16:9';
+      document.body.setAttribute('data-aspect-ratio', val);
+      if (btnAspectToggle) {
+        btnAspectToggle.innerHTML = isPortrait ? '📱 9:16 直屏' : '🖥️ 16:9 寬螢幕';
+        btnAspectToggle.title = isPortrait ? '目前為手機直屏模式 (9:16)，點擊切換為電腦寬螢幕 (16:9)' : '目前為電腦寬螢幕模式 (16:9)，點擊切換為手機直屏 (9:16)';
+      }
+      if (visualEngine && typeof visualEngine.setAspectRatio === 'function') {
+        visualEngine.setAspectRatio(val);
+      }
+      if (festiveAmbiance && typeof festiveAmbiance.setAspectRatio === 'function') {
+        festiveAmbiance.setAspectRatio(val);
+      }
+    }
+
+    if (btnAspectToggle) {
+      btnAspectToggle.onclick = function() {
+        var cur = (state.config && state.config.aspectRatio === '9:16') ? '9:16' : '16:9';
+        var next = (cur === '16:9') ? '9:16' : '16:9';
+        state.setAspectRatio(next);
+      };
+    }
 
     var selBatchMode = document.getElementById('stage-batch-mode-select');
     var chkLockBatchMode = document.getElementById('stage-lock-batch-mode');
@@ -777,6 +802,9 @@ helpers_and_ui = r"""
       if (viewStage && viewStage.classList.contains('active')) {
         updateStageView();
       }
+      if (eventName === 'ASPECT_RATIO_CHANGED' || (newState && newState.config && newState.config.aspectRatio)) {
+        applyAspectRatio(newState.config.aspectRatio || '16:9');
+      }
     });
 
     var bundleScript = document.getElementById('__INITIAL_BUNDLE__');
@@ -789,11 +817,13 @@ helpers_and_ui = r"""
       if (visualEngine) visualEngine.setTheme(state.config.theme);
       if (inputEventName) inputEventName.value = state.config.eventName;
       if (headerBrandTitle) headerBrandTitle.textContent = state.config.eventName;
+      applyAspectRatio(state.config.aspectRatio || '16:9');
       renderPrizeInputs();
       if (state.history.length > 0) switchToStage();
     } else {
       renderPrizeInputs();
       if (themeSelector) document.body.setAttribute('data-theme', themeSelector.value);
+      applyAspectRatio(state.config.aspectRatio || '16:9');
     }
   })();
 """
