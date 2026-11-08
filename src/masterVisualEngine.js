@@ -645,6 +645,49 @@
   };
 
   /**
+   * 全開模式多得主共振慶祝動畫
+   */
+  MasterVisualEngine.prototype.celebrateBatchWinners = function (winners, durationMs, onDone) {
+    this.stop();
+    var self = this;
+    durationMs = durationMs || 900;
+    if (!this.canvas || !this.ctx) {
+      this.isSpinning = false;
+      if (typeof onDone === 'function') onDone();
+      return;
+    }
+    var topName = (winners && winners.length > 0) ? winners[0] + ' 等 ' + winners.length + ' 位' : '全開中獎';
+    var startTime = performance.now();
+
+    function batchStep(now) {
+      var p = Math.min(1, (now - startTime) / durationMs);
+      var pulseScale = 1 + 0.10 * Math.sin(p * Math.PI);
+
+      if (self.currentMode === 'RIBBON_TAPE' || self.currentMode === 'WINDOWED_WHEEL') {
+        self._drawRibbonStatic(self.ribbonFinalOffset, pulseScale, topName, true);
+      } else if (self.currentMode === 'LOTTO_EGG') {
+        self._drawLottoWinnerCelebration(topName, pulseScale);
+      } else if (self.currentMode === 'SLOT_MACHINE') {
+        self._drawSlotStatic(topName, pulseScale, true);
+      } else if (self.currentMode === 'SPLIT_FLAP') {
+        self._drawFlapStatic(topName, pulseScale, true);
+      } else if (self.currentMode === 'HYPERSPACE') {
+        self._drawHyperspaceStatic(topName, pulseScale, true);
+      }
+
+      if (p < 1) {
+        self.animId = requestAnimationFrame(batchStep);
+      } else {
+        self.isSpinning = false;
+        self.animId = null;
+        if (typeof onDone === 'function') onDone();
+      }
+    }
+
+    this.animId = requestAnimationFrame(batchStep);
+  };
+
+  /**
    * 啟動抽獎動畫主入口
    */
   MasterVisualEngine.prototype.spinTo = function (mode, targetIndex, targetName, durationMs, onDone) {

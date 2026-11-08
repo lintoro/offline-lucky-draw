@@ -190,6 +190,82 @@
     }
   };
 
+  /**
+   * 播放全開模式群體慶祝音效 (Play Batch Celebration)
+   */
+  AudioSynthesizer.prototype.playBatchCelebration = function () {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      var self = this;
+      var notes = [
+        { freq: 440.00, time: 0.00, dur: 0.12, type: 'triangle' }, // A4
+        { freq: 554.37, time: 0.08, dur: 0.14, type: 'sine' },     // C#5
+        { freq: 659.25, time: 0.16, dur: 0.16, type: 'sine' },     // E5
+        { freq: 880.00, time: 0.24, dur: 0.35, type: 'triangle' }, // A5
+        { freq: 1108.73, time: 0.32, dur: 0.55, type: 'sine' },    // C#6
+        { freq: 1318.51, time: 0.32, dur: 0.65, type: 'sine' }     // E6
+      ];
+      var base = this.ctx.currentTime;
+      notes.forEach(function (n) {
+        var st = base + n.time;
+        var et = st + n.dur;
+        var osc = self.ctx.createOscillator();
+        var gain = self.ctx.createGain();
+        osc.type = n.type || 'sine';
+        osc.frequency.setValueAtTime(n.freq, st);
+        gain.gain.setValueAtTime(0.001, st);
+        gain.gain.linearRampToValueAtTime(0.24, st + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, et);
+        osc.connect(gain);
+        gain.connect(self.ctx.destination);
+        osc.start(st);
+        osc.stop(et);
+      });
+    } catch (e) {}
+  };
+
+  /**
+   * 播放抽獎圓滿結束「感謝大家的參與」謝幕和弦 (Grand Finale Warm Chime)
+   */
+  AudioSynthesizer.prototype.playFinale = function () {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      var self = this;
+      // 溫暖大調九和弦管鐘長延音 (F Major 9 / C Major 9)
+      var chords = [
+        { freq: 261.63, time: 0.00, dur: 2.2, type: 'triangle', gain: 0.25 }, // C4
+        { freq: 329.63, time: 0.15, dur: 2.4, type: 'sine', gain: 0.22 },     // E4
+        { freq: 392.00, time: 0.30, dur: 2.5, type: 'sine', gain: 0.20 },     // G4
+        { freq: 493.88, time: 0.45, dur: 2.6, type: 'sine', gain: 0.18 },     // B4
+        { freq: 523.25, time: 0.60, dur: 2.8, type: 'triangle', gain: 0.24 }, // C5
+        { freq: 587.33, time: 0.75, dur: 2.8, type: 'sine', gain: 0.18 },     // D5
+        { freq: 659.25, time: 0.90, dur: 2.8, type: 'sine', gain: 0.16 },     // E5
+        { freq: 783.99, time: 1.05, dur: 3.0, type: 'sine', gain: 0.16 },     // G5
+        { freq: 1046.50, time: 1.20, dur: 3.2, type: 'sine', gain: 0.18 }     // C6
+      ];
+      var base = this.ctx.currentTime;
+      chords.forEach(function (n) {
+        var st = base + n.time;
+        var et = st + n.dur;
+        var osc = self.ctx.createOscillator();
+        var gain = self.ctx.createGain();
+        osc.type = n.type || 'sine';
+        osc.frequency.setValueAtTime(n.freq, st);
+        gain.gain.setValueAtTime(0.001, st);
+        gain.gain.linearRampToValueAtTime(n.gain || 0.2, st + 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.0001, et);
+        osc.connect(gain);
+        gain.connect(self.ctx.destination);
+        osc.start(st);
+        osc.stop(et);
+      });
+    } catch (e) {}
+  };
+
   AudioSynthesizer.prototype.close = function () {
     if (this.ctx && typeof this.ctx.close === 'function') {
       try {

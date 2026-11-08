@@ -464,6 +464,120 @@
   };
 
   /**
+   * 全開模式抽獎 (BATCH_ALL: READY -> SPINNING)
+   * 一次抽完當前獎項所有剩餘名額 (若候選池不足則抽完池內所有合格者)
+   */
+  StateManager.prototype.startBatchSpin = function () {
+    if (this.status !== 'READY') {
+      throw new Error('[Invalid State] Can only start batch spin from READY state, current is: ' + this.status);
+    }
+
+    var prize = this.getCurrentPrize();
+    if (!prize || prize.remainingQuota <= 0) {
+      throw new Error('[Invalid Operation] Current prize has no remaining quota.');
+    }
+
+    if (this.candidatePool.length === 0) {
+      this.status = 'PARTIAL_FILLED';
+      this._notify('POOL_DEPLETED');
+      throw new Error('[Pool Depleted] Candidate pool is empty.');
+    }
+
+    var mode = this.getModeForCurrentPrize();
+    var countToDraw = Math.min(prize.remainingQuota, this.candidatePool.length);
+
+    // 模擬抽出的幸運兒名單
+    var poolCopy = this.candidatePool.slice();
+    var winCountsCopy = Object.assign({}, this.winCounts);
+    var selectedWinners = [];
+    var lastWinnerIdx = 0;
+
+    for (var i = 0; i < countToDraw; i++) {
+      if (poolCopy.length === 0) break;
+      var rIdx = getSecureRandomIndex(poolCopy.length);
+      var wName = poolCopy[rIdx];
+      selectedWinners.push(wName);
+      lastWinnerIdx = rIdx;
+
+      var newCount = (winCountsCopy[wName] || 0) + 1;
+      winCountsCopy[wName] = newCount;
+
+      if (!this.config.allowDuplicates) {
+        poolCopy.splice(rIdx, 1);
+      } else if (this.config.maxWinLimit && newCount >= this.config.maxWinLimit) {
+        poolCopy.splice(rIdx, 1);
+      }
+    }
+
+    if (selectedWinners.length === 0) {
+      this.status = 'PARTIAL_FILLED';
+      this._notify('POOL_DEPLETED');
+      throw new Error('[Pool Depleted] No eligible candidates for batch spin.');
+    }
+
+    this.status = 'SPINNING';
+    this._pendingSpin = {
+      isBatch: true,
+      winners: selectedWinners,
+      winnerName: selectedWinners[0],
+      winnerIndex: lastWinnerIdx,
+      prizeId: prize.id,
+      prizeName: prize.name,
+      mode: mode
+    };
+
+    this._notify('SPIN_STARTED', this._pendingSpin);
+    return this._pendingSpin;
+  };
+
+  /**
+   * 全開模式揭曉得獎人名冊 (ANIMATION_END: SPINNING -> REVEALED)
+   */
+  StateManager.prototype.revealBatchWinners = function () {
+    if (this.status !== 'SPINNING' || !this._pendingSpin || !this._pendingSpin.isBatch) {
+      throw new Error('[Invalid State] Can only reveal batch winners when in batch SPINNING state.');
+    }
+
+    var pending = this._pendingSpin;
+    var prize = this.prizes.find(function (p) { return p.id === pending.prizeId; });
+    var winners = pending.winners;
+    var records = [];
+    var nowIso = new Date().toISOString();
+
+    for (var i = 0; i < winners.length; i++) {
+      var w = winners[i];
+      if (prize && prize.remainingQuota > 0) {
+        prize.remainingQuota -= 1;
+      }
+      var count = (this.winCounts[w] || 0) + 1;
+      this.winCounts[w] = count;
+
+      if (!this.config.allowDuplicates) {
+        var idx = this.candidatePool.indexOf(w);
+        if (idx !== -1) this.candidatePool.splice(idx, 1);
+      } else if (this.config.maxWinLimit && count >= this.config.maxWinLimit) {
+        var idx = this.candidatePool.indexOf(w);
+        if (idx !== -1) this.candidatePool.splice(idx, 1);
+      }
+
+      var rec = {
+        sequence: this.history.length + 1,
+        prizeName: pending.prizeName,
+        winnerName: w,
+        timestamp: nowIso
+      };
+      this.history.push(rec);
+      records.push(rec);
+    }
+
+    this.status = 'REVEALED';
+    this._pendingSpin = null;
+
+    this._notify('BATCH_WINNERS_REVEALED', records);
+    return records;
+  };
+
+  /**
    * 繼續下一輪抽取 (CONTINUE_SPIN: REVEALED -> READY / PARTIAL_FILLED / COMPLETED)
    */
   StateManager.prototype.continueSpin = function () {

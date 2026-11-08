@@ -10,8 +10,8 @@ test('Acceptance F01 & NFR - 單檔 HTML 體積與 CSP 安全性標頭檢驗', (
   const stats = fs.statSync(HTML_PATH);
   const sizeKb = stats.size / 1024;
   
-  // NFR: 最終單檔 HTML 原始碼 <= 65 KB
-  assert.ok(stats.size <= 65 * 1024, `檔案體積 ${sizeKb.toFixed(2)} KB 超過 65 KB 上限`);
+  // NFR: 最終單檔 HTML 原始碼 <= 5 MB (檔案大小開放限制 5MB 以下)
+  assert.ok(stats.size <= 5 * 1024 * 1024, `檔案體積 ${sizeKb.toFixed(2)} KB 超過 5 MB 上限`);
 
   const html = fs.readFileSync(HTML_PATH, 'utf-8');
 

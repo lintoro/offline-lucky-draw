@@ -20,6 +20,11 @@ test('DOM UI 驗證 - 1. 預設獎項載入與新增獎項按鈕互動', () => {
   assert.ok(names.includes('頭獎'), '必須包含頭獎');
   assert.ok(names.includes('二獎 (普獎)'), '必須包含二獎');
 
+  // 驗證獎項總覽結算標籤 (目前共有N項獎項 合計M位名額)
+  const prizeCountBadge = document.getElementById('prize-count-badge');
+  assert.ok(prizeCountBadge, '必須存在 #prize-count-badge 結算標籤');
+  assert.equal(prizeCountBadge.textContent.trim(), '目前共有 3 項獎項 ｜ 合計 8 位名額', '初始獎項結算顯示應為 3 項 8 名額');
+
   // 測試點擊「新增獎項」
   const btnAdd = document.getElementById('btn-add-prize');
   assert.ok(btnAdd, '必須存在新增獎項按鈕');
@@ -27,6 +32,7 @@ test('DOM UI 驗證 - 1. 預設獎項載入與新增獎項按鈕互動', () => {
 
   const updatedCards = document.querySelectorAll('#prizes-list .prize-card');
   assert.equal(updatedCards.length, 4, '點擊新增後獎項清單應變為 4 項');
+  assert.equal(prizeCountBadge.textContent.trim(), '目前共有 4 項獎項 ｜ 合計 9 位名額', '新增獎項後結算標籤應同步更新為 4 項 9 名額');
 });
 
 test('DOM UI 驗證 - 2. 載入 30 人範例名單按鈕互動', () => {

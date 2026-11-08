@@ -120,10 +120,28 @@ test('E2E DOM 模擬抽獎完整流程驗證', async () => {
   btnStartStage.click();
   assert.ok(viewStage.classList.contains('active'), 'Stage view should be active');
   assert.ok(!viewSetup.classList.contains('active'), 'Setup view should be inactive');
-  assert.equal(btnSpin.textContent.trim(), '開始抽獎', 'Spin button should say 開始抽獎');
-  assert.equal(btnSpin.disabled, false, 'Spin button should not be disabled');
 
-  // Fast-forward animation in spinTo by overriding duration to 20ms during test
+  const selBatchMode = document.getElementById('stage-batch-mode-select');
+  const chkLockBatchMode = document.getElementById('stage-lock-batch-mode');
+  const finaleOverlay = document.getElementById('finale-curtain-overlay');
+  const modalBatchContainer = document.getElementById('modal-batch-container');
+
+  assert.ok(selBatchMode, 'stage-batch-mode-select must exist');
+  assert.ok(chkLockBatchMode, 'stage-lock-batch-mode must exist');
+  assert.ok(finaleOverlay, 'finale-curtain-overlay must exist');
+  assert.ok(modalBatchContainer, 'modal-batch-container must exist');
+
+  // Requirement: 預設是關閉的，設定好才能按抽獎
+  assert.equal(selBatchMode.value, '', 'Mode select should be empty by default');
+  assert.equal(btnSpin.disabled, true, 'Spin button should be disabled before mode selected');
+  assert.equal(btnSpin.textContent.trim(), '請先設定抽獎模式');
+
+  // Select SINGLE mode
+  selBatchMode.value = 'SINGLE';
+  selBatchMode.onchange();
+  assert.equal(btnSpin.disabled, false, 'Spin button should be enabled after SINGLE mode selected');
+  assert.ok(btnSpin.textContent.includes('開始抽獎'));
+
   // Step 4: Click "開始抽獎"
   btnSpin.click();
 
@@ -131,8 +149,7 @@ test('E2E DOM 模擬抽獎完整流程驗證', async () => {
   assert.equal(btnSpin.disabled, true, 'Spin button should be disabled during spin');
   assert.equal(btnSpin.textContent.trim(), '搖獎中...', 'Button text should be 搖獎中...');
 
-  // Wait for animation and celebration to finish (spin duration + 800ms celebration)
-  // We wait for winnerModal to become active
+  // Wait for animation and celebration to finish
   let modalPopped = false;
   for (let i = 0; i < 60; i++) {
     await new Promise(r => setTimeout(r, 100));
@@ -148,10 +165,19 @@ test('E2E DOM 模擬抽獎完整流程驗證', async () => {
   assert.ok(candidateLines.includes(firstWinner), `Winner ${firstWinner} must be one of the candidates`);
 
   // Step 5: Continue next round via btnModalContinue click
+  // When not locked: 每次抽完需重新設定才能再抽
   btnModalContinue.click();
   assert.ok(!winnerModal.classList.contains('active'), 'Modal should close after continue');
+  assert.equal(selBatchMode.value, '', 'Mode should reset after draw when not locked');
+  assert.equal(btnSpin.disabled, true, 'Spin button should be disabled after draw without lock');
 
-  // Step 6: Test Space key trigger for next spin
+  // Step 6: Test locking batch mode (固定抽獎模式)
+  chkLockBatchMode.checked = true;
+  selBatchMode.value = 'SINGLE';
+  selBatchMode.onchange();
+  assert.equal(btnSpin.disabled, false, 'Spin button enabled when mode selected and locked');
+
+  // Trigger spin via Space key
   const spaceEvent = new window.KeyboardEvent('keydown', { code: 'Space', bubbles: true });
   window.dispatchEvent(spaceEvent);
 
@@ -174,6 +200,27 @@ test('E2E DOM 模擬抽獎完整流程驗證', async () => {
   // Close modal with Space key
   window.dispatchEvent(spaceEvent);
   assert.ok(!winnerModal.classList.contains('active'), 'Modal should close when Space pressed');
+
+  // Mode should remain locked as SINGLE because chkLockBatchMode was checked
+  assert.equal(selBatchMode.value, 'SINGLE', 'Mode should stay locked when chkLockBatchMode is checked');
+
+  // Step 7: Test 全開模式 (BATCH_ALL)
+  selBatchMode.value = 'BATCH_ALL';
+  selBatchMode.onchange();
+  assert.ok(btnSpin.textContent.includes('全開抽獎'), 'Button text should reflect batch mode');
+
+  btnSpin.click();
+  assert.equal(btnSpin.textContent.trim(), '搖獎中...');
+
+  modalPopped = false;
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 100));
+    if (winnerModal.classList.contains('active')) {
+      modalPopped = true;
+      break;
+    }
+  }
+  assert.ok(modalPopped, 'Batch winner modal should pop');
 
   console.log('E2E DOM Draw flow verified successfully! First winner:', firstWinner, ', Second winner:', secondWinner);
 });
