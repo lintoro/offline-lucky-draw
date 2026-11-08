@@ -459,45 +459,230 @@
   };
 
   /**
-   * 3. 復古拉霸輪軸 (Slot Machine)
+   * 3. 拉斯維加斯奢華拉霸機 (Vegas Luxury Slot Machine)
+   * 包含 3D 圓柱滾輪、流動高光立體陰影、跑馬燈氖燈環繞、高潮金光爆擊
    */
-  MasterVisualEngine.prototype._drawSlotStatic = function (name, pulseScale, isLocked) {
+  MasterVisualEngine.prototype._drawSlotStatic = function (name, pulseScale, isLocked, reelAngle, bulbPhase, prevName, nextName) {
     if (!this.ctx || !this.canvas) return;
     var ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
     ctx.clearRect(0, 0, w, h);
     var cx = w / 2, cy = h / 2;
     pulseScale = pulseScale || 1;
+    reelAngle = reelAngle || 0;
+    bulbPhase = (typeof bulbPhase === 'number') ? bulbPhase : 0;
 
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(pulseScale, pulseScale);
 
-    var rw = 360, rh = 170;
+    var rw = 400, rh = 190;
+    var halfW = rw / 2, halfH = rh / 2;
+
+    // 1. 機身奢華外框 (Vegas Casino Marquee Chassis)
+    var chassisGrad = ctx.createLinearGradient(-halfW, -halfH, halfW, halfH);
+    chassisGrad.addColorStop(0, '#2a1708');
+    chassisGrad.addColorStop(0.3, '#180e05');
+    chassisGrad.addColorStop(0.7, '#150a04');
+    chassisGrad.addColorStop(1, '#2c1808');
+
     ctx.beginPath();
-    ctx.roundRect(-rw / 2, -rh / 2, rw, rh, 18);
-    ctx.fillStyle = '#1c1e24';
+    ctx.roundRect(-halfW, -halfH, rw, rh, 20);
+    ctx.fillStyle = chassisGrad;
     ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = isLocked ? '#fde047' : '#d4af37';
+
+    // 金屬雙層電鍍外圈 (Gold Metallic Bevel)
+    var rimGrad = ctx.createLinearGradient(-halfW, -halfH, halfW, halfH);
+    rimGrad.addColorStop(0, '#fef08a');
+    rimGrad.addColorStop(0.25, '#d4af37');
+    rimGrad.addColorStop(0.5, '#78350f');
+    rimGrad.addColorStop(0.75, '#fde047');
+    rimGrad.addColorStop(1, '#b45309');
+
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = rimGrad;
     if (isLocked) {
-      ctx.shadowColor = '#d4af37';
-      ctx.shadowBlur = 18;
+      ctx.shadowColor = '#fde047';
+      ctx.shadowBlur = 24;
     }
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // 內部槽
-    ctx.beginPath();
-    ctx.roundRect(-rw / 2 + 16, -rh / 2 + 16, rw - 32, rh - 32, 10);
-    ctx.fillStyle = '#0f1115';
-    ctx.fill();
+    // 2. 跑馬燈氖燈陣列 (Chasing Casino Marquee Lights)
+    var bulbMargin = 10;
+    var bulbsX = 10, bulbsY = 5;
+    var bulbRadius = 3.6;
+    var stepX = (rw - bulbMargin * 2) / (bulbsX - 1);
+    var stepY = (rh - bulbMargin * 2) / (bulbsY - 1);
 
-    // 姓名
-    ctx.fillStyle = isLocked ? '#fde047' : '#ffffff';
-    ctx.font = 'bold 36px sans-serif';
+    var bulbPositions = [];
+    // 頂部
+    for (var bx = 0; bx < bulbsX; bx++) {
+      bulbPositions.push({ x: -halfW + bulbMargin + bx * stepX, y: -halfH + bulbMargin });
+    }
+    // 右側
+    for (var by = 1; by < bulbsY - 1; by++) {
+      bulbPositions.push({ x: halfW - bulbMargin, y: -halfH + bulbMargin + by * stepY });
+    }
+    // 底部
+    for (var bx = bulbsX - 1; bx >= 0; bx--) {
+      bulbPositions.push({ x: -halfW + bulbMargin + bx * stepX, y: halfH - bulbMargin });
+    }
+    // 左側
+    for (var by = bulbsY - 2; by >= 1; by--) {
+      bulbPositions.push({ x: -halfW + bulbMargin, y: -halfH + bulbMargin + by * stepY });
+    }
+
+    for (var bi = 0; bi < bulbPositions.length; bi++) {
+      var bp = bulbPositions[bi];
+      var bulbState = (bi + Math.floor(bulbPhase)) % 3;
+      var bColor, bGlow;
+      if (isLocked) {
+        var flash = Math.floor(bulbPhase * 2) % 2 === 0;
+        bColor = flash ? '#ffffff' : '#fde047';
+        bGlow = flash ? '#fef08a' : '#d4af37';
+      } else {
+        if (bulbState === 0) {
+          bColor = '#ffffff';
+          bGlow = '#fde047';
+        } else if (bulbState === 1) {
+          bColor = '#f59e0b';
+          bGlow = '#d97706';
+        } else {
+          bColor = '#78350f';
+          bGlow = 'transparent';
+        }
+      }
+
+      ctx.beginPath();
+      ctx.arc(bp.x, bp.y, bulbRadius, 0, 2 * Math.PI);
+      ctx.fillStyle = bColor;
+      if (bGlow !== 'transparent') {
+        ctx.shadowColor = bGlow;
+        ctx.shadowBlur = 8;
+      }
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // 頂部皇冠標牌 (Crown Header)
+    var headW = 180, headH = 22;
+    ctx.beginPath();
+    ctx.roundRect(-headW / 2, -halfH - 12, headW, headH, 6);
+    ctx.fillStyle = '#1c1917';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#d4af37';
+    ctx.stroke();
+
+    ctx.fillStyle = '#fde047';
+    ctx.font = 'bold 10px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(name || '...', 0, 0);
+    ctx.fillText(isLocked ? '★ JACKPOT WINNER ★' : '★ VEGAS LUXURY REEL ★', 0, -halfH - 1);
+
+    // 3. 滾輪視窗 (Reel Window with Recessed Depth)
+    var winW = 340, winH = 126;
+    var winLeft = -winW / 2, winTop = -winH / 2;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(winLeft, winTop, winW, winH, 8);
+    ctx.clip();
+
+    // 滾輪底色 (深色緞面)
+    ctx.fillStyle = '#0b0c10';
+    ctx.fillRect(winLeft, winTop, winW, winH);
+
+    // 4. 3D 圓柱投影繪製 (3D Cylindrical Drum Projection)
+    var R = 72;
+    var slots = [
+      { text: prevName || '', angle: reelAngle - Math.PI / 3 },
+      { text: name || '...', angle: reelAngle },
+      { text: nextName || '', angle: reelAngle + Math.PI / 3 }
+    ];
+
+    for (var si = 0; si < slots.length; si++) {
+      var s = slots[si];
+      if (!s.text) continue;
+      var a = s.angle;
+      if (a < -Math.PI / 2 || a > Math.PI / 2) continue;
+
+      var sy = R * Math.sin(a);
+      var scY = Math.cos(a);
+      var scX = 0.88 + 0.12 * Math.cos(a);
+      var alpha = Math.max(0, Math.cos(a));
+
+      ctx.save();
+      ctx.translate(0, sy);
+      ctx.scale(scX, Math.max(0.2, scY));
+      ctx.globalAlpha = alpha;
+
+      var isCenter = Math.abs(a) < 0.25;
+      if (isLocked && isCenter) {
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#fde047';
+        ctx.shadowBlur = 18;
+      } else {
+        ctx.fillStyle = isCenter ? '#f4f4f5' : '#9ca3af';
+      }
+
+      ctx.font = isCenter ? 'bold 34px sans-serif' : 'bold 24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(s.text, 0, 0);
+
+      ctx.restore();
+    }
+
+    // 5. 3D 圓柱流光與邊緣立體陰影 (Cylindrical Lighting & Specular Sheen)
+    var cylGrad = ctx.createLinearGradient(0, winTop, 0, winTop + winH);
+    cylGrad.addColorStop(0, 'rgba(0, 0, 0, 0.92)');
+    cylGrad.addColorStop(0.22, 'rgba(0, 0, 0, 0.35)');
+    cylGrad.addColorStop(0.48, 'rgba(255, 255, 255, 0.12)');
+    cylGrad.addColorStop(0.52, 'rgba(255, 255, 255, 0.16)');
+    cylGrad.addColorStop(0.78, 'rgba(0, 0, 0, 0.35)');
+    cylGrad.addColorStop(1, 'rgba(0, 0, 0, 0.92)');
+
+    ctx.fillStyle = cylGrad;
+    ctx.fillRect(winLeft, winTop, winW, winH);
+
+    ctx.restore();
+
+    // 6. 中獎支付線與指針 (Payline Reticle & Golden Laser Pointers)
+    ctx.beginPath();
+    ctx.moveTo(winLeft, 0);
+    ctx.lineTo(winLeft + winW, 0);
+    ctx.lineWidth = isLocked ? 2 : 1;
+    ctx.strokeStyle = isLocked ? 'rgba(253, 224, 71, 0.85)' : 'rgba(212, 175, 55, 0.35)';
+    if (isLocked) {
+      ctx.shadowColor = '#fde047';
+      ctx.shadowBlur = 10;
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    var arrowSize = 9;
+    ctx.beginPath();
+    ctx.moveTo(winLeft - 4, -arrowSize);
+    ctx.lineTo(winLeft + 8, 0);
+    ctx.lineTo(winLeft - 4, arrowSize);
+    ctx.closePath();
+    ctx.fillStyle = isLocked ? '#fde047' : '#d4af37';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(-winLeft + 4, -arrowSize);
+    ctx.lineTo(-winLeft - 8, 0);
+    ctx.lineTo(-winLeft + 4, arrowSize);
+    ctx.closePath();
+    ctx.fillStyle = isLocked ? '#fde047' : '#d4af37';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.roundRect(winLeft, winTop, winW, winH, 8);
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = isLocked ? '#fde047' : '#78350f';
+    ctx.stroke();
 
     ctx.restore();
   };
@@ -625,7 +810,7 @@
       } else if (self.currentMode === 'LOTTO_EGG') {
         self._drawLottoWinnerCelebration(winnerName, pulseScale);
       } else if (self.currentMode === 'SLOT_MACHINE') {
-        self._drawSlotStatic(winnerName, pulseScale, true);
+        self._drawSlotStatic(winnerName, pulseScale, true, 0, now / 50);
       } else if (self.currentMode === 'SPLIT_FLAP') {
         self._drawFlapStatic(winnerName, pulseScale, true);
       } else if (self.currentMode === 'HYPERSPACE') {
@@ -668,7 +853,7 @@
       } else if (self.currentMode === 'LOTTO_EGG') {
         self._drawLottoWinnerCelebration(topName, pulseScale);
       } else if (self.currentMode === 'SLOT_MACHINE') {
-        self._drawSlotStatic(topName, pulseScale, true);
+        self._drawSlotStatic(topName, pulseScale, true, 0, now / 50);
       } else if (self.currentMode === 'SPLIT_FLAP') {
         self._drawFlapStatic(topName, pulseScale, true);
       } else if (self.currentMode === 'HYPERSPACE') {
@@ -832,23 +1017,48 @@
 
     } else if (mode === 'SLOT_MACHINE') {
       var tStart = performance.now();
-      var lastRoll = 0;
+      var cands = (this.candidates && this.candidates.length > 0) ? this.candidates : [targetName || '幸運得主'];
+      var totalRolls = 38;
+      var lastRollTick = -1;
 
       this.animId = requestAnimationFrame(function stepSlot(now) {
         if (!self.isSpinning) return;
         var p = Math.min(1, (now - tStart) / durationMs);
+        var eased = easeOutQuint(p);
+        var rollPos = totalRolls * eased;
+        var itemIdx = Math.floor(rollPos);
+        var fraction = rollPos - itemIdx;
 
-        if (now - lastRoll > 40 + 220 * (1 - (1 - easeOutQuint(p)))) {
-          lastRoll = now;
-          var rand = self.candidates[Math.floor(Math.random() * self.candidates.length)] || '...';
-          self._drawSlotStatic(p > 0.95 ? targetName : rand, 1, p >= 0.95);
+        if (itemIdx !== lastRollTick) {
+          lastRollTick = itemIdx;
           if (self.audio) self.audio.playTick();
         }
 
-        if (p < 1) {
+        var isDone = (p >= 1);
+        var bulbPhase = now / 60;
+        var curName, prevName, nextName, reelAngle;
+
+        if (isDone) {
+          curName = targetName;
+          var tidx = cands.indexOf(targetName);
+          if (tidx === -1) tidx = 0;
+          prevName = cands[(tidx - 1 + cands.length) % cands.length] || '';
+          nextName = cands[(tidx + 1) % cands.length] || '';
+          reelAngle = 0;
+        } else {
+          var ci = itemIdx % cands.length;
+          curName = (p > 0.94) ? targetName : cands[ci];
+          prevName = cands[(ci - 1 + cands.length) % cands.length] || '';
+          nextName = (p > 0.90) ? targetName : cands[(ci + 1) % cands.length] || '';
+          reelAngle = (fraction - 0.5) * (Math.PI / 3);
+        }
+
+        self._drawSlotStatic(curName, 1, isDone, reelAngle, bulbPhase, prevName, nextName);
+
+        if (!isDone) {
           self.animId = requestAnimationFrame(stepSlot);
         } else {
-          self._drawSlotStatic(targetName, 1, true);
+          self._drawSlotStatic(targetName, 1, true, 0, bulbPhase, prevName, nextName);
           if (typeof onDone === 'function') onDone();
         }
       });

@@ -9,6 +9,9 @@ with open('src/audioSynthesizer.js', 'r', encoding='utf-8') as f:
 with open('src/confetti.js', 'r', encoding='utf-8') as f:
     confetti_code = f.read()
 
+with open('src/festiveAmbiance.js', 'r', encoding='utf-8') as f:
+    festive_code = f.read()
+
 with open('src/masterVisualEngine.js', 'r', encoding='utf-8') as f:
     visual_code = f.read()
 
@@ -66,6 +69,8 @@ helpers_and_ui = r"""
 
     var audio = new AudioSynthesizer();
     var confetti = new ConfettiEngine(document.getElementById('confetti-canvas'));
+    var ambientCanvas = document.getElementById('ambient-canvas');
+    var festiveAmbiance = ambientCanvas ? new FestiveAmbiance(ambientCanvas, state.theme) : null;
     var visualEngine = new MasterVisualEngine(document.getElementById('stage-canvas'), audio);
 
     var themeSelector = document.getElementById('theme-selector');
@@ -148,6 +153,7 @@ helpers_and_ui = r"""
         var val = this.value;
         document.body.setAttribute('data-theme', val);
         state.setTheme(val);
+        if (festiveAmbiance) festiveAmbiance.setTheme(val);
       };
     }
 
@@ -369,6 +375,7 @@ helpers_and_ui = r"""
       viewStage.classList.add('active');
       if (btnEmergencyEdit) btnEmergencyEdit.classList.remove('hidden');
       visualEngine.setCandidates(state.candidatePool);
+      if (festiveAmbiance) festiveAmbiance.start();
       if (!chkLockBatchMode || !chkLockBatchMode.checked) {
         if (selBatchMode) selBatchMode.value = '';
         if (batchModeDesc) batchModeDesc.textContent = '請先選擇抽取模式';
@@ -382,6 +389,7 @@ helpers_and_ui = r"""
         openDialog('返回設定頁面', '確定返回設定頁面？目前未抽出的獎項進度將完整保留。', true, function() {
           visualEngine.stop();
           confetti.stop();
+          if (festiveAmbiance) festiveAmbiance.stop();
           if (winnerModal) winnerModal.classList.remove('active');
           if (finaleModal) finaleModal.classList.remove('active');
           if (finaleTimer) clearTimeout(finaleTimer);
@@ -536,6 +544,7 @@ helpers_and_ui = r"""
               var records = state.revealBatchWinners();
               audio.playBatchCelebration();
               confetti.fire(120);
+              if (festiveAmbiance) festiveAmbiance.triggerCelebration();
               visualEngine.celebrateBatchWinners(pending.winners, 900, function() {
                 if (modalPrizeTag) modalPrizeTag.textContent = '恭喜榮獲 ' + pending.prizeName + ' ｜ 全開 ' + records.length + ' 名';
                 renderModalWinners(records);
@@ -550,6 +559,7 @@ helpers_and_ui = r"""
               var record = state.revealWinner();
               audio.playFanfare();
               confetti.fire(75);
+              if (festiveAmbiance) festiveAmbiance.triggerCelebration();
               visualEngine.celebrateWinner(record.winnerName, 800, function() {
                 if (modalPrizeTag) modalPrizeTag.textContent = '恭喜榮獲 ' + record.prizeName;
                 renderModalWinners([record]);
@@ -620,6 +630,7 @@ helpers_and_ui = r"""
       audio.init();
       audio.playFinale();
       confetti.fire(140);
+      if (festiveAmbiance) festiveAmbiance.triggerCelebration();
       var s = state.getState();
       var totalWinners = s.history.length;
       var totalPrizes = s.prizes.length;
@@ -734,6 +745,7 @@ helpers_and_ui = r"""
         openDialog('重置大會確認', '確定要重置整個抽獎大會？所有歷史紀錄將被抹除。', true, function() {
           visualEngine.stop();
           confetti.stop();
+          if (festiveAmbiance) festiveAmbiance.stop();
           if (winnerModal) winnerModal.classList.remove('active');
           if (finaleModal) finaleModal.classList.remove('active');
           if (finaleTimer) clearTimeout(finaleTimer);
@@ -769,6 +781,7 @@ helpers_and_ui = r"""
       if (inputCandidates) inputCandidates.value = state.rawInputText;
       if (themeSelector) themeSelector.value = state.config.theme;
       document.body.setAttribute('data-theme', state.config.theme);
+      if (festiveAmbiance) festiveAmbiance.setTheme(state.config.theme);
       if (inputEventName) inputEventName.value = state.config.eventName;
       if (headerBrandTitle) headerBrandTitle.textContent = state.config.eventName;
       renderPrizeInputs();
@@ -783,6 +796,7 @@ full_js = "\n\n".join([
     state_code,
     audio_code,
     confetti_code,
+    festive_code,
     visual_code,
     helpers_and_ui
 ])
