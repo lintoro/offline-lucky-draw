@@ -88,8 +88,11 @@ test('FestiveAmbiance - 4. Mock Canvas 渲染與物理迴圈無拋錯檢驗', ()
 
   const ambiance = new FestiveAmbiance(mockCanvas, 'OBSIDIAN_GOLD');
   assert.doesNotThrow(() => {
-    ambiance._update();
-    ambiance._render();
+    ['OBSIDIAN_GOLD', 'ROYAL_CRIMSON', 'MIDNIGHT_SAPPHIRE', 'EMERALD_PALACE'].forEach(theme => {
+      ambiance.setTheme(theme);
+      ambiance._update();
+      ambiance._render();
+    });
     ambiance.triggerCelebration();
     ambiance._update();
     ambiance._render();
@@ -103,3 +106,52 @@ test('FestiveAmbiance - 5. 零外部依賴與離線單檔規範檢驗 (Zero Exte
   assert.doesNotMatch(code, /fetch\(|XMLHttpRequest/i, '不得包含網路請求');
   assert.doesNotMatch(code, /<script|<link|<img/i, '不得動態注入外部標籤');
 });
+
+test('MasterVisualEngine - 6. 拉霸機 (SLOT_MACHINE) 停止時人名 100% 正對指針中心 (零壓線驗證)', () => {
+  const MasterVisualEngine = require('../src/masterVisualEngine.js');
+  const drawnTexts = [];
+  const mockCtx = {
+    clearRect: () => {},
+    save: () => {},
+    restore: () => {},
+    beginPath: () => {},
+    closePath: () => {},
+    moveTo: () => {},
+    lineTo: () => {},
+    quadraticCurveTo: () => {},
+    bezierCurveTo: () => {},
+    arc: () => {},
+    rect: () => {},
+    fillRect: () => {},
+    strokeRect: () => {},
+    fill: () => {},
+    stroke: () => {},
+    clip: () => {},
+    translate: () => {},
+    rotate: () => {},
+    scale: () => {},
+    fillText: (text, x, y) => {
+      drawnTexts.push({ text, x, y });
+    },
+    createRadialGradient: () => ({ addColorStop: () => {} }),
+    createLinearGradient: () => ({ addColorStop: () => {} }),
+    roundRect: () => {}
+  };
+
+  const mockCanvas = {
+    width: 640,
+    height: 480,
+    getContext: () => mockCtx
+  };
+
+  const engine = new MasterVisualEngine(mockCanvas, null, 'OBSIDIAN_GOLD');
+  engine.setCandidates(['王大明', '林小華', '張志豪', '陳冠宇']);
+
+  // 繪製鎖定狀態的拉霸機 (slotPixelOffset = 0)
+  engine._drawSlotStatic('陳冠宇', 1, true, 0, 0, '林小華', '張志豪', 0);
+
+  const winnerDraw = drawnTexts.find(d => d.text === '陳冠宇');
+  assert.ok(winnerDraw, '必須繪製出中獎人姓名「陳冠宇」');
+  assert.ok(Math.abs(winnerDraw.y) <= 2, '中獎人姓名必須精確位於名牌與指針正中央 (y ≈ 0)，絕不可壓在名牌分界黑線上');
+});
+

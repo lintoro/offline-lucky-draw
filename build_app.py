@@ -71,7 +71,7 @@ helpers_and_ui = r"""
     var confetti = new ConfettiEngine(document.getElementById('confetti-canvas'));
     var ambientCanvas = document.getElementById('ambient-canvas');
     var festiveAmbiance = ambientCanvas ? new FestiveAmbiance(ambientCanvas, state.theme) : null;
-    var visualEngine = new MasterVisualEngine(document.getElementById('stage-canvas'), audio);
+    var visualEngine = new MasterVisualEngine(document.getElementById('stage-canvas'), audio, state.theme);
 
     var themeSelector = document.getElementById('theme-selector');
     var inputEventName = document.getElementById('input-event-name');
@@ -154,6 +154,7 @@ helpers_and_ui = r"""
         document.body.setAttribute('data-theme', val);
         state.setTheme(val);
         if (festiveAmbiance) festiveAmbiance.setTheme(val);
+        if (visualEngine) visualEngine.setTheme(val);
       };
     }
 
@@ -375,7 +376,10 @@ helpers_and_ui = r"""
       viewStage.classList.add('active');
       if (btnEmergencyEdit) btnEmergencyEdit.classList.remove('hidden');
       visualEngine.setCandidates(state.candidatePool);
-      if (festiveAmbiance) festiveAmbiance.start();
+      if (festiveAmbiance) {
+        festiveAmbiance.resize();
+        festiveAmbiance.start();
+      }
       if (!chkLockBatchMode || !chkLockBatchMode.checked) {
         if (selBatchMode) selBatchMode.value = '';
         if (batchModeDesc) batchModeDesc.textContent = '請先選擇抽取模式';
@@ -782,6 +786,7 @@ helpers_and_ui = r"""
       if (themeSelector) themeSelector.value = state.config.theme;
       document.body.setAttribute('data-theme', state.config.theme);
       if (festiveAmbiance) festiveAmbiance.setTheme(state.config.theme);
+      if (visualEngine) visualEngine.setTheme(state.config.theme);
       if (inputEventName) inputEventName.value = state.config.eventName;
       if (headerBrandTitle) headerBrandTitle.textContent = state.config.eventName;
       renderPrizeInputs();
