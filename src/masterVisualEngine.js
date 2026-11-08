@@ -155,8 +155,10 @@
       this.canvas.width = targetW;
       this.canvas.height = targetH;
       if (this.canvas.style) {
-        this.canvas.style.width = this.logicalW + 'px';
-        this.canvas.style.height = this.logicalH + 'px';
+        this.canvas.style.maxWidth = '100%';
+        this.canvas.style.maxHeight = '100%';
+        this.canvas.style.width = 'auto';
+        this.canvas.style.height = 'auto';
         this.canvas.style.aspectRatio = (this.aspectRatio === '9:16') ? '9 / 16' : '4 / 3';
       }
     }

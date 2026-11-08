@@ -140,6 +140,27 @@ helpers_and_ui = r"""
     var chkLockBatchMode = document.getElementById('stage-lock-batch-mode');
     var batchModeDesc = document.getElementById('batch-mode-desc-text');
 
+    var btnToggleFeed = document.getElementById('btn-toggle-feed');
+    var btnCloseFeed = document.getElementById('btn-close-feed');
+    var stageFeedBox = document.getElementById('stage-feed-box');
+    var historyCounterBadge = document.getElementById('history-counter-badge');
+
+    if (btnToggleFeed && stageFeedBox) {
+      btnToggleFeed.onclick = function() {
+        if (document.body.getAttribute('data-aspect-ratio') === '9:16') {
+          stageFeedBox.classList.toggle('active');
+        } else {
+          stageFeedBox.classList.toggle('collapsed');
+        }
+      };
+    }
+    if (btnCloseFeed && stageFeedBox) {
+      btnCloseFeed.onclick = function() {
+        stageFeedBox.classList.remove('active');
+        stageFeedBox.classList.add('collapsed');
+      };
+    }
+
     var finaleModal = document.getElementById('finale-curtain-overlay');
     var finaleTierTag = document.getElementById('finale-tier-tag');
     var finaleTitleText = document.getElementById('finale-title-text');
@@ -486,6 +507,7 @@ helpers_and_ui = r"""
 
       if (candidateBadge) candidateBadge.textContent = s.candidatePool.length + ' 人登記';
       if (historyCounter) historyCounter.textContent = s.history.length + ' 人獲獎';
+      if (historyCounterBadge) historyCounterBadge.textContent = s.history.length + '人';
       if (stageCandidatesRemaining) stageCandidatesRemaining.textContent = s.candidatePool.length + ' 人';
 
       var curIdx = -1;
@@ -798,6 +820,7 @@ helpers_and_ui = r"""
       }
       if (newState && newState.history && historyCounter) {
         historyCounter.textContent = newState.history.length + ' 人獲獎';
+        if (historyCounterBadge) historyCounterBadge.textContent = newState.history.length + '人';
       }
       if (viewStage && viewStage.classList.contains('active')) {
         updateStageView();
