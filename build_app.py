@@ -480,7 +480,7 @@ helpers_and_ui = r"""
       viewSetup.classList.remove('active');
       viewStage.classList.add('active');
       if (btnEmergencyEdit) btnEmergencyEdit.classList.remove('hidden');
-      visualEngine.setCandidates(state.candidatePool);
+      visualEngine.setCandidates(state.candidatePool, state.initialCandidates);
       if (festiveAmbiance) {
         festiveAmbiance.resize();
         festiveAmbiance.start();
@@ -589,6 +589,7 @@ helpers_and_ui = r"""
         if (stageQuotaRemaining) stageQuotaRemaining.textContent = '全部抽滿';
       }
 
+      visualEngine.setCandidates(s.candidatePool, state.initialCandidates);
       var curMode = state.getModeForCurrentPrize();
       visualEngine.setMode(curMode);
 
@@ -712,7 +713,7 @@ helpers_and_ui = r"""
       if (winnerModal) winnerModal.classList.remove('active');
       confetti.stop();
       var nextSt = state.continueSpin();
-      visualEngine.setCandidates(state.candidatePool);
+      visualEngine.setCandidates(state.candidatePool, state.initialCandidates);
 
       var isLocked = chkLockBatchMode && chkLockBatchMode.checked;
       if (!isLocked) {
@@ -732,7 +733,7 @@ helpers_and_ui = r"""
       confetti.stop();
       if (state.getState().status === 'REVEALED') {
         var nextSt = state.continueSpin();
-        visualEngine.setCandidates(state.candidatePool);
+        visualEngine.setCandidates(state.candidatePool, state.initialCandidates);
 
         var isLocked = chkLockBatchMode && chkLockBatchMode.checked;
         if (!isLocked) {

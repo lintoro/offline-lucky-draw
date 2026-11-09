@@ -100,6 +100,7 @@
     this.dpr = 1;
 
     this.candidates = [];
+    this.allCandidates = [];
     this.currentMode = 'RIBBON_TAPE';
     this.animId = null;
     this.isSpinning = false;
@@ -192,8 +193,17 @@
     return ENGINE_THEMES[this.theme] || ENGINE_THEMES.OBSIDIAN_GOLD;
   };
 
-  MasterVisualEngine.prototype.setCandidates = function (candidates) {
+  MasterVisualEngine.prototype.setCandidates = function (candidates, allCandidates) {
     this.candidates = Array.isArray(candidates) ? candidates.slice() : [];
+    if (Array.isArray(allCandidates) && allCandidates.length > 0) {
+      this.allCandidates = allCandidates.slice();
+    } else if (!this.allCandidates || this.allCandidates.length === 0) {
+      this.allCandidates = this.candidates.slice();
+    }
+  };
+
+  MasterVisualEngine.prototype.setAllCandidates = function (allCandidates) {
+    this.allCandidates = Array.isArray(allCandidates) ? allCandidates.slice() : [];
   };
 
   MasterVisualEngine.prototype.setMode = function (mode) {
@@ -245,12 +255,15 @@
     var cardGap = isPortrait ? 12 : 16;
     var stride = cardW + cardGap;
 
+    var pool = (this.allCandidates && this.allCandidates.length > 0)
+      ? this.allCandidates
+      : ((this.candidates && this.candidates.length > 0) ? this.candidates : ['幸運候選人', '尊貴貴賓', '大會嘉賓', '現場抽獎']);
+
     var strip = customStrip || this.ribbonStrip;
     if (!strip || strip.length === 0) {
-      var list = (this.candidates && this.candidates.length > 0) ? this.candidates : ['幸運候選人', '尊貴貴賓', '大會嘉賓', '現場抽獎'];
       strip = [];
-      for (var s = 0; s < 30; s++) {
-        strip.push(list[s % list.length]);
+      for (var s = 0; s < 40; s++) {
+        strip.push(pool[s % pool.length]);
       }
     }
 
@@ -279,13 +292,13 @@
     }
     ctx.globalAlpha = 1;
 
-    // 2. 滑軌裁切視窗與名牌序列
+    // 2. 滑軌裁切視窗與名牌序列（動態無縫無限環形安全投影）
     ctx.save();
     safeRoundRect(ctx, 18, trackY + 4, w - 36, trackH - 8, 8);
     ctx.clip();
 
-    var firstVisible = Math.max(0, Math.floor((offset - cx - stride) / stride));
-    var lastVisible = Math.min(strip.length - 1, Math.ceil((offset + cx + stride) / stride));
+    var firstVisible = Math.floor((offset - cx - stride) / stride);
+    var lastVisible = Math.ceil((offset + cx + stride) / stride);
 
     for (var i = firstVisible; i <= lastVisible; i++) {
       var itemX = cx + i * stride - offset;
@@ -336,18 +349,24 @@
       ctx.font = 'bold 11px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      var tagText = isTargetCard ? '★ WINNER LOCKED ★' : ('NO.' + (((i % (this.candidates.length || 1)) + 1).toString().padStart(3, '0')));
+      var numIndex = (((i % pool.length) + pool.length) % pool.length) + 1;
+      var tagText = isTargetCard ? '★ WINNER LOCKED ★' : ('NO.' + numIndex.toString().padStart(3, '0'));
       ctx.fillText(tagText, 0, cardTop + 23);
 
-      // 候選人姓名（100% 垂直置中於名牌視覺中心 cy+8，避開任何邊線）
-      var nameStr = (isTargetCard && winnerName) ? winnerName : strip[i];
+      // 候選人姓名（100% 垂直置中於名牌視覺中心 cy+8，避開任何邊線，具備環形兜底保證絕不空卡）
+      var nameStr = (isTargetCard && winnerName)
+        ? winnerName
+        : ((strip && i >= 0 && i < strip.length)
+            ? strip[i]
+            : pool[((i % pool.length) + pool.length) % pool.length]);
       ctx.fillStyle = isTargetCard ? '#ffffff' : (isCenterCard ? '#ffffff' : '#cbd5e1');
       ctx.font = isTargetCard ? (isPortrait ? 'bold 20px sans-serif' : 'bold 25px sans-serif') : (isPortrait ? 'bold 17px sans-serif' : 'bold 22px sans-serif');
       ctx.fillText(nameStr, 0, 8);
 
       // 底部稀有度光條
       var stripColors = [tc.primary, '#38bdf8', '#f59e0b', '#10b981', '#ec4899'];
-      ctx.fillStyle = isTargetCard ? tc.light : stripColors[i % stripColors.length];
+      var colorIdx = ((i % stripColors.length) + stripColors.length) % stripColors.length;
+      ctx.fillStyle = isTargetCard ? tc.light : stripColors[colorIdx];
       ctx.fillRect(cardLeft + 16, cardTop + cardH - 14, cardW - 32, 4);
 
       ctx.restore();
@@ -836,7 +855,9 @@
     ctx.fillRect(winLeft, winTop, winW, winH);
 
     // 建立可視 5 格名牌列 [-2, -1, 0, +1, +2]
-    var cands = (this.candidates && this.candidates.length > 0) ? this.candidates : ['幸運得主', '尊貴嘉賓', '年度大獎'];
+    var cands = (this.allCandidates && this.allCandidates.length > 0)
+      ? this.allCandidates
+      : ((this.candidates && this.candidates.length > 0) ? this.candidates : ['幸運得主', '尊貴嘉賓', '年度大獎']);
     for (var rel = -2; rel <= 2; rel++) {
       var itemName = '';
       if (customItems && typeof centerIndex === 'number') {
@@ -1342,12 +1363,17 @@
     durationMs = durationMs || 3800;
 
     if (mode === 'RIBBON_TAPE' || mode === 'WINDOWED_WHEEL') {
-      var stride = 176;
-      var pool = (self.candidates && self.candidates.length > 0) ? self.candidates : ['幸運候選人', '尊貴貴賓', '大會嘉賓', '現場抽獎'];
+      var isPortrait = (this.aspectRatio === '9:16');
+      var cardW = isPortrait ? 120 : 160;
+      var cardGap = isPortrait ? 12 : 16;
+      var stride = cardW + cardGap;
+      var pool = (self.allCandidates && self.allCandidates.length > 0)
+        ? self.allCandidates
+        : ((self.candidates && self.candidates.length > 0) ? self.candidates : ['幸運候選人', '尊貴貴賓', '大會嘉賓', '現場抽獎']);
       var poolLen = pool.length;
       var targetK = Math.max(poolLen, 45);
       var strip = [];
-      for (var idx = 0; idx <= targetK + 8; idx++) {
+      for (var idx = 0; idx <= targetK + 40; idx++) {
         if (idx === targetK) {
           strip.push(targetName);
         } else {
@@ -1474,10 +1500,12 @@
 
     } else if (mode === 'SLOT_MACHINE') {
       // ★ 建立連續無縫拉霸捲帶，目標得主精確放置在 index = targetSlotIdx
-      var cands = (this.candidates && this.candidates.length > 0) ? this.candidates : [targetName || '幸運得主'];
+      var cands = (this.allCandidates && this.allCandidates.length > 0)
+        ? this.allCandidates
+        : ((this.candidates && this.candidates.length > 0) ? this.candidates : [targetName || '幸運得主']);
       var targetSlotIdx = 42;
       var slotStrip = [];
-      for (var si = 0; si <= targetSlotIdx + 6; si++) {
+      for (var si = 0; si <= targetSlotIdx + 20; si++) {
         if (si === targetSlotIdx) {
           slotStrip.push(targetName);
         } else {
@@ -1573,7 +1601,9 @@
     } else if (mode === 'HYPERSPACE') {
       this._initStars();
       var tH = performance.now();
-      var candsH = (this.candidates && this.candidates.length > 0) ? this.candidates : [targetName];
+      var candsH = (this.allCandidates && this.allCandidates.length > 0)
+        ? this.allCandidates
+        : ((this.candidates && this.candidates.length > 0) ? this.candidates : [targetName]);
 
       this.animId = requestAnimationFrame(function stepWarp(now) {
         if (!self.isSpinning) return;
