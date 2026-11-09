@@ -73,3 +73,30 @@ test('ViewSeparation - 2. 按下「進入抽獎大會舞台」後切換至舞台
   assert.ok(!viewStage.classList.contains('active'), '返回後 #view-stage 必須失去 active');
   assert.ok(btnEmergencyEdit.classList.contains('hidden'), '返回設定後「返回設定」按鈕必須隱藏');
 });
+
+test('ViewSeparation - 3. 9:16 手機直屏模式下，未進入舞台前 #view-stage 嚴格隱藏 (display: none)，切換後 #view-setup 嚴格隱藏', () => {
+  const html = fs.readFileSync(HTML_PATH, 'utf-8');
+  const dom = new JSDOM(html, {
+    runScripts: 'dangerously',
+    resources: 'usable'
+  });
+  const { window } = dom;
+  const { document } = window;
+
+  const viewSetup = document.getElementById('view-setup');
+  const viewStage = document.getElementById('view-stage');
+
+  // 切換至 9:16 直屏模式
+  document.body.setAttribute('data-aspect-ratio', '9:16');
+
+  // 1. 初始狀態：舞台嚴格隱藏，設定頁面顯示
+  assert.equal(window.getComputedStyle(viewStage).display, 'none', '9:16 初始時 #view-stage 必須為 display: none');
+  assert.equal(window.getComputedStyle(viewSetup).display, 'flex', '9:16 初始時 #view-setup 必須為 display: flex');
+
+  // 2. 切換至舞台狀態：設定頁面嚴格隱藏，舞台顯示
+  viewSetup.classList.remove('active');
+  viewStage.classList.add('active');
+  assert.equal(window.getComputedStyle(viewStage).display, 'flex', '9:16 進入舞台後 #view-stage 必須為 display: flex');
+  assert.equal(window.getComputedStyle(viewSetup).display, 'none', '9:16 進入舞台後 #view-setup 必須為 display: none');
+});
+
