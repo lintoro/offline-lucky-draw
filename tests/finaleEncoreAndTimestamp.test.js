@@ -65,7 +65,7 @@ test('Encore & Grand Finale - 2. 安可加碼獎流程、歷史紀錄延續與�
   // 發動【安可加碼 (Encore)】
   const encorePrize = sm.setupEncore('加碼獎 (第 1 輪安可)', 1);
   assert.equal(encorePrize.name, '加碼獎 (第 1 輪安可)');
-  assert.equal(sm.status, 'SETUP');
+  assert.equal(sm.status, 'READY', 'setupEncore 後狀態機直接進入 READY 可立即開抽');
   assert.equal(sm.prizes.length, 3, '獎項數量必須新增至 3 項');
   assert.equal(sm.history.length, 2, '前兩輪得獎紀錄必須 100% 完整保留');
 
@@ -110,4 +110,21 @@ test('DOM & UI Transition - 3. HTML 中具備光影幕簾遮罩與安可加碼�
   // 驗證得獎彈窗確認按鈕
   const btnModalContinue = doc.getElementById('btn-modal-continue');
   assert.ok(btnModalContinue, '得獎人彈窗必須存在 #btn-modal-continue 按鈕');
+
+  // 驗證現場安可加碼專屬面板
+  const modalEncoreSetup = doc.getElementById('modal-encore-setup');
+  assert.ok(modalEncoreSetup, '舞台現場必須具備 #modal-encore-setup 專屬加碼面板');
+  assert.ok(doc.getElementById('input-encore-prize-name'), '必須具備加碼名稱輸入框');
+  assert.ok(doc.getElementById('input-encore-quota'), '必須具備加碼名額微調框');
+  assert.ok(doc.getElementById('btn-encore-quota-minus'), '必須具備名額減按鈕');
+  assert.ok(doc.getElementById('btn-encore-quota-plus'), '必須具備名額加按鈕');
+  assert.ok(doc.getElementById('select-encore-mode'), '必須具備加碼開獎動態模式選單');
+  assert.ok(doc.getElementById('btn-encore-start-draw'), '必須具備立即開抽加碼大獎按鈕');
+  assert.ok(doc.getElementById('btn-encore-cancel'), '必須具備取消按鈕');
+
+  // 驗證高對比防透光過場幕簾主題樣式
+  assert.ok(htmlContent.includes('body[data-theme="OBSIDIAN_GOLD"] .stage-transition-shutter'), '必須定義黑曜金對比幕簾');
+  assert.ok(htmlContent.includes('body[data-theme="ROYAL_CRIMSON"] .stage-transition-shutter'), '必須定義皇家緋紅對比幕簾');
+  assert.ok(htmlContent.includes('body[data-theme="MIDNIGHT_SAPPHIRE"] .stage-transition-shutter'), '必須定義午夜藍對比幕簾');
+  assert.ok(htmlContent.includes('body[data-theme="EMERALD_PALACE"] .stage-transition-shutter'), '必須定義祖母綠對比幕簾');
 });

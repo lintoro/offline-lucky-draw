@@ -172,6 +172,18 @@ helpers_and_ui = r"""
     var btnFinaleEncore = document.getElementById('btn-finale-encore');
     var btnFinaleClose = document.getElementById('btn-finale-close');
     var stageTransitionShutter = document.getElementById('stage-transition-shutter');
+    var modalEncoreSetup = document.getElementById('modal-encore-setup');
+    var encoreRoundTag = document.getElementById('encore-round-tag');
+    var encoreRoundNum = document.getElementById('encore-round-num');
+    var inputEncorePrizeName = document.getElementById('input-encore-prize-name');
+    var inputEncoreQuota = document.getElementById('input-encore-quota');
+    var btnEncoreQuotaMinus = document.getElementById('btn-encore-quota-minus');
+    var btnEncoreQuotaPlus = document.getElementById('btn-encore-quota-plus');
+    var encoreRemainingCandidates = document.getElementById('encore-remaining-candidates');
+    var selectEncoreMode = document.getElementById('select-encore-mode');
+    var btnEncoreStartDraw = document.getElementById('btn-encore-start-draw');
+    var btnEncoreCancel = document.getElementById('btn-encore-cancel');
+    var btnEncoreQuickList = document.querySelectorAll ? document.querySelectorAll('.btn-encore-quick-q') : [];
     var finaleTimer = null;
 
     function playStageTransition(cb) {
@@ -184,8 +196,8 @@ helpers_and_ui = r"""
         if (typeof cb === 'function') cb();
         setTimeout(function() {
           stageTransitionShutter.classList.remove('shutter-active');
-        }, 90);
-      }, 180);
+        }, 80);
+      }, 200);
     }
 
     var btnLoadSample = document.getElementById('btn-load-sample');
@@ -606,8 +618,10 @@ helpers_and_ui = r"""
       }
 
       visualEngine.setCandidates(s.candidatePool, state.initialCandidates);
-      var curMode = state.getModeForCurrentPrize();
-      visualEngine.setMode(curMode);
+      if (s.status !== 'SPINNING' && s.status !== 'REVEALED') {
+        var curMode = state.getModeForCurrentPrize();
+        visualEngine.setMode(curMode);
+      }
 
       var selectedMode = selBatchMode ? selBatchMode.value : '';
 
@@ -767,8 +781,8 @@ helpers_and_ui = r"""
         if (batchModeDesc) batchModeDesc.textContent = '每次抽完需重新設定模式';
       }
 
-      updateStageView();
       playStageTransition();
+      updateStageView();
     }
 
     function closeModalOnly() {
@@ -790,8 +804,8 @@ helpers_and_ui = r"""
           if (batchModeDesc) batchModeDesc.textContent = '每次抽完需重新設定模式';
         }
 
-        updateStageView();
         playStageTransition();
+        updateStageView();
       }
     }
 
@@ -822,31 +836,105 @@ helpers_and_ui = r"""
       btnFinaleEncore.onclick = function() {
         if (finaleModal) finaleModal.classList.remove('active');
         confetti.stop();
-        visualEngine.stop();
-        if (festiveAmbiance) festiveAmbiance.stop();
 
-        // 1. 自動建立安可特別獎 (保留所有既有歷史紀錄與名冊排除狀態)
+        // 1. 計算目前加碼輪次
         var encoreCount = state.prizes.filter(function(p){ return p.name.indexOf('加碼') !== -1 || p.name.indexOf('安可') !== -1; }).length + 1;
-        var encoreName = '加碼獎 (第 ' + encoreCount + ' 輪安可)';
-        var encorePrize = state.setupEncore(encoreName, 1);
+        if (encoreRoundNum) encoreRoundNum.textContent = encoreCount;
+        if (inputEncorePrizeName) inputEncorePrizeName.value = '加碼獎 (第 ' + encoreCount + ' 輪安可)';
+        if (inputEncoreQuota) inputEncoreQuota.value = 1;
 
-        // 2. 切換回設定畫面
-        viewStage.classList.remove('active');
-        viewSetup.classList.add('active');
-        if (btnEmergencyEdit) btnEmergencyEdit.classList.add('hidden');
+        // 2. 計算全場剩餘可抽名額
+        var eligibleCount = state.config.allowDuplicates ? state.initialCandidates.length : state.candidatePool.length;
+        if (encoreRemainingCandidates) encoreRemainingCandidates.textContent = eligibleCount;
 
-        // 3. 重新渲染設定畫面中的獎項清單
-        renderPrizesList();
-        if (candidateBadge && inputCandidates) {
-          var eligibleCount = state.config.allowDuplicates ? parseCandidateText(inputCandidates.value).length : state.candidatePool.length;
-          candidateBadge.textContent = eligibleCount + ' 人可抽 (已保證名冊連續性)';
+        if (selectEncoreMode) selectEncoreMode.value = 'RANDOM';
+
+        // 3. 現場直接彈出加碼設定專屬面板，不踢回全場初始設定頁
+        if (modalEncoreSetup) {
+          modalEncoreSetup.classList.add('active');
+        }
+      };
+    }
+
+    if (btnEncoreQuotaMinus) {
+      btnEncoreQuotaMinus.onclick = function() {
+        if (!inputEncoreQuota) return;
+        var val = parseInt(inputEncoreQuota.value, 10) || 1;
+        if (val > 1) inputEncoreQuota.value = val - 1;
+      };
+    }
+
+    if (btnEncoreQuotaPlus) {
+      btnEncoreQuotaPlus.onclick = function() {
+        if (!inputEncoreQuota) return;
+        var val = parseInt(inputEncoreQuota.value, 10) || 1;
+        inputEncoreQuota.value = val + 1;
+      };
+    }
+
+    if (btnEncoreQuickList && btnEncoreQuickList.length > 0) {
+      Array.prototype.forEach.call(btnEncoreQuickList, function(btn) {
+        btn.onclick = function() {
+          var q = this.getAttribute('data-q');
+          if (q && inputEncoreQuota) inputEncoreQuota.value = q;
+        };
+      });
+    }
+
+    if (btnEncoreCancel) {
+      btnEncoreCancel.onclick = function() {
+        if (modalEncoreSetup) modalEncoreSetup.classList.remove('active');
+        if (state.isAllCompleted() && finaleModal) {
+          finaleModal.classList.add('active');
+        }
+      };
+    }
+
+    if (modalEncoreSetup) {
+      modalEncoreSetup.onclick = function(e) {
+        if (e.target === modalEncoreSetup) {
+          modalEncoreSetup.classList.remove('active');
+          if (state.isAllCompleted() && finaleModal) finaleModal.classList.add('active');
+        }
+      };
+    }
+
+    if (btnEncoreStartDraw) {
+      btnEncoreStartDraw.onclick = function() {
+        var encoreCount = state.prizes.filter(function(p){ return p.name.indexOf('加碼') !== -1 || p.name.indexOf('安可') !== -1; }).length + 1;
+        var pName = (inputEncorePrizeName && inputEncorePrizeName.value.trim()) || ('加碼獎 (第 ' + encoreCount + ' 輪安可)');
+        var quota = parseInt(inputEncoreQuota ? inputEncoreQuota.value : '1', 10);
+        if (isNaN(quota) || quota <= 0) quota = 1;
+
+        if (!state.config.allowDuplicates && state.candidatePool.length === 0) {
+          openDialog('候選人不足', '全場候選人名冊先前已全數獲獎！\n若要繼續加碼抽獎，請點擊「返回設定」勾選「允許重複獲獎」或於名冊追加新成員。', false);
+          return;
         }
 
-        if (state.candidatePool.length === 0 && !state.config.allowDuplicates) {
-          openDialog('🔥 開啟安可加碼抽獎！', '已為您新增加碼獎項：【' + encorePrize.name + '】。\n提示：目前名單上的所有人員先前皆已中獎。若要讓同仁繼續加碼抽，請於左側勾選「允許重複中獎」，或在名冊中追加新的人員名單！', false);
+        var pMode = (selectEncoreMode && selectEncoreMode.value) ? selectEncoreMode.value : 'RANDOM';
+        state.setupEncore(pName, quota, pMode);
+
+        if (modalEncoreSetup) modalEncoreSetup.classList.remove('active');
+        if (finaleModal) finaleModal.classList.remove('active');
+        confetti.stop();
+
+        viewSetup.classList.remove('active');
+        viewStage.classList.add('active');
+        if (btnEmergencyEdit) btnEmergencyEdit.classList.remove('hidden');
+
+        if (quota > 1) {
+          if (selBatchMode) selBatchMode.value = 'BATCH_ALL';
+          if (batchModeDesc) batchModeDesc.textContent = '全開模式：一次抽完此獎所有名額';
         } else {
-          openDialog('🔥 開啟安可加碼抽獎！', '已自動為您新增加碼獎項：【' + encorePrize.name + '】。\n所有已中獎人員紀錄完整保留，且已抽中者維持排除防弊。\n您可以直接修改獎項名稱或名額，確認後點擊「進入抽獎大會舞台」即可立即展開加碼開獎！', false);
+          if (selBatchMode) selBatchMode.value = 'SINGLE';
+          if (batchModeDesc) batchModeDesc.textContent = '一般模式：一次抽一個人';
         }
+
+        visualEngine.setCandidates(state.candidatePool, state.initialCandidates);
+        if (festiveAmbiance) festiveAmbiance.start();
+        playStageTransition();
+        updateStageView();
+        window.scrollTo(0, 0);
       };
     }
 
@@ -986,8 +1074,10 @@ helpers_and_ui = r"""
         historyCounter.textContent = newState.history.length + ' 人獲獎';
         if (historyCounterBadge) historyCounterBadge.textContent = newState.history.length + '人';
       }
-      if (viewStage && viewStage.classList.contains('active')) {
-        updateStageView();
+      if (eventName !== 'WINNER_REVEALED' && eventName !== 'BATCH_WINNERS_REVEALED') {
+        if (viewStage && viewStage.classList.contains('active')) {
+          updateStageView();
+        }
       }
       if (eventName === 'ASPECT_RATIO_CHANGED' || (newState && newState.config && newState.config.aspectRatio)) {
         applyAspectRatio(newState.config.aspectRatio || '16:9');

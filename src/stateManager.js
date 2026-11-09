@@ -235,6 +235,7 @@
   StateManager.prototype.getModeForCurrentPrize = function () {
     var cur = this.getCurrentPrize();
     if (!cur) return this.ANIMATION_MODES[0];
+    if (cur.mode && cur.mode !== 'RANDOM') return cur.mode;
     if (!this.prizeModeMap[cur.id]) {
       this._scheduleAnimationModes();
     }
@@ -352,7 +353,7 @@
     var hasQuota = totalRemaining > 0;
 
     if (hasCandidates && hasQuota && this.prizes.length >= 1) {
-      if (this.status === 'SETUP' || this.status === 'PARTIAL_FILLED') {
+      if (this.status === 'SETUP' || this.status === 'PARTIAL_FILLED' || this.status === 'COMPLETED') {
         this.status = 'READY';
       }
       return true;
@@ -660,23 +661,29 @@
 
   /**
    * 建立安可加碼獎 (Encore)
-   * 保留既有名冊與排除狀態，新增一個加碼獎項，狀態轉為 SETUP 便於確認或直接開抽
+   * 保留既有名冊與排除狀態，新增一個加碼獎項，狀態轉為 READY 便於直接在舞台現場開抽
    * @param {string} [encorePrizeName]
    * @param {number} [quota]
+   * @param {string} [preferredMode]
    * @returns {object}
    */
-  StateManager.prototype.setupEncore = function (encorePrizeName, quota) {
+  StateManager.prototype.setupEncore = function (encorePrizeName, quota, preferredMode) {
     encorePrizeName = encorePrizeName || '加碼獎 (安可特別獎)';
     quota = (typeof quota === 'number' && quota > 0) ? quota : 1;
     var newPrize = {
       id: 'prize_encore_' + Date.now() + '_' + (this.prizes.length + 1),
       name: encorePrizeName,
       totalQuota: quota,
-      remainingQuota: quota
+      remainingQuota: quota,
+      mode: (preferredMode && preferredMode !== 'RANDOM') ? preferredMode : null
     };
     this.prizes.push(newPrize);
     this.config.currentPrizeId = newPrize.id;
-    this.status = 'SETUP';
+    if (preferredMode && preferredMode !== 'RANDOM') {
+      this.prizeModeMap[newPrize.id] = preferredMode;
+    }
+    this.status = 'READY';
+    this.validate();
     this._notify('ENCORE_ADDED', newPrize);
     return newPrize;
   };
