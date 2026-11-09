@@ -169,8 +169,24 @@ helpers_and_ui = r"""
     var finaleSubtitleText = document.getElementById('finale-subtitle-text');
     var finaleStatsSummary = document.getElementById('finale-stats-summary');
     var btnFinaleExportCsv = document.getElementById('btn-finale-export-csv');
+    var btnFinaleEncore = document.getElementById('btn-finale-encore');
     var btnFinaleClose = document.getElementById('btn-finale-close');
+    var stageTransitionShutter = document.getElementById('stage-transition-shutter');
     var finaleTimer = null;
+
+    function playStageTransition(cb) {
+      if (!stageTransitionShutter) {
+        if (typeof cb === 'function') cb();
+        return;
+      }
+      stageTransitionShutter.classList.add('shutter-active');
+      setTimeout(function() {
+        if (typeof cb === 'function') cb();
+        setTimeout(function() {
+          stageTransitionShutter.classList.remove('shutter-active');
+        }, 90);
+      }, 180);
+    }
 
     var btnLoadSample = document.getElementById('btn-load-sample');
     var btnDedupNames = document.getElementById('btn-dedup-names');
@@ -674,11 +690,23 @@ helpers_and_ui = r"""
               confetti.fire(120);
               if (festiveAmbiance) festiveAmbiance.triggerCelebration();
               visualEngine.celebrateBatchWinners(pending.winners, 900, function() {
+                var isDone = state.isAllCompleted();
                 if (modalPrizeTag) modalPrizeTag.textContent = '恭喜榮獲 ' + pending.prizeName + ' ｜ 全開 ' + records.length + ' 名';
                 renderModalWinners(records);
+                if (btnModalContinue) {
+                  if (isDone) {
+                    btnModalContinue.innerHTML = '🏆 大會全數開出 ｜ 查看圓滿落幕 ➔';
+                    btnModalContinue.className = 'btn-cta btn-modal-action btn-modal-finale-action';
+                  } else {
+                    btnModalContinue.innerHTML = '抽取下一位 (Space)';
+                    btnModalContinue.className = 'btn-cta btn-gold-action';
+                  }
+                }
                 if (winnerModal) winnerModal.classList.add('active');
                 if (stageBatchHud) stageBatchHud.classList.add('hidden');
-                updateStageView();
+                renderLiveFeed(state.getState().history);
+                if (historyCounter) historyCounter.textContent = state.getState().history.length + ' 人獲獎';
+                if (historyCounterBadge) historyCounterBadge.textContent = state.getState().history.length + '人';
               });
             });
           } else {
@@ -690,10 +718,22 @@ helpers_and_ui = r"""
               confetti.fire(75);
               if (festiveAmbiance) festiveAmbiance.triggerCelebration();
               visualEngine.celebrateWinner(record.winnerName, 800, function() {
+                var isDone = state.isAllCompleted();
                 if (modalPrizeTag) modalPrizeTag.textContent = '恭喜榮獲 ' + record.prizeName;
                 renderModalWinners([record]);
+                if (btnModalContinue) {
+                  if (isDone) {
+                    btnModalContinue.innerHTML = '🏆 大會全數開出 ｜ 查看圓滿落幕 ➔';
+                    btnModalContinue.className = 'btn-cta btn-modal-action btn-modal-finale-action';
+                  } else {
+                    btnModalContinue.innerHTML = '抽取下一位 (Space)';
+                    btnModalContinue.className = 'btn-cta btn-gold-action';
+                  }
+                }
                 if (winnerModal) winnerModal.classList.add('active');
-                updateStageView();
+                renderLiveFeed(state.getState().history);
+                if (historyCounter) historyCounter.textContent = state.getState().history.length + ' 人獲獎';
+                if (historyCounterBadge) historyCounterBadge.textContent = state.getState().history.length + '人';
               });
             });
           }
@@ -712,8 +752,14 @@ helpers_and_ui = r"""
     function closeModalAndProceed() {
       if (winnerModal) winnerModal.classList.remove('active');
       confetti.stop();
+      var isCompletedBefore = state.isAllCompleted();
       var nextSt = state.continueSpin();
       visualEngine.setCandidates(state.candidatePool, state.initialCandidates);
+
+      if (nextSt === 'COMPLETED' || isCompletedBefore) {
+        showFinaleCurtain();
+        return;
+      }
 
       var isLocked = chkLockBatchMode && chkLockBatchMode.checked;
       if (!isLocked) {
@@ -722,18 +768,21 @@ helpers_and_ui = r"""
       }
 
       updateStageView();
-
-      if (nextSt === 'COMPLETED') {
-        scheduleFinale();
-      }
+      playStageTransition();
     }
 
     function closeModalOnly() {
       if (winnerModal) winnerModal.classList.remove('active');
       confetti.stop();
       if (state.getState().status === 'REVEALED') {
+        var isCompletedBefore = state.isAllCompleted();
         var nextSt = state.continueSpin();
         visualEngine.setCandidates(state.candidatePool, state.initialCandidates);
+
+        if (nextSt === 'COMPLETED' || isCompletedBefore) {
+          showFinaleCurtain();
+          return;
+        }
 
         var isLocked = chkLockBatchMode && chkLockBatchMode.checked;
         if (!isLocked) {
@@ -742,9 +791,7 @@ helpers_and_ui = r"""
         }
 
         updateStageView();
-        if (nextSt === 'COMPLETED') {
-          scheduleFinale();
-        }
+        playStageTransition();
       }
     }
 
@@ -756,18 +803,51 @@ helpers_and_ui = r"""
     }
 
     function showFinaleCurtain() {
+      if (finaleTimer) clearTimeout(finaleTimer);
       audio.init();
       audio.playFinale();
-      confetti.fire(140);
+      confetti.fire(150);
       if (festiveAmbiance) festiveAmbiance.triggerCelebration();
       var s = state.getState();
       var totalWinners = s.history.length;
       var totalPrizes = s.prizes.length;
       if (finaleTierTag) finaleTierTag.textContent = (s.config.eventName || '年度慶典抽獎大會') + ' ｜ 圓滿落幕';
-      if (finaleTitleText) finaleTitleText.textContent = '感謝大家的參與';
+      if (finaleTitleText) finaleTitleText.textContent = '感謝大家的熱情參與';
       if (finaleSubtitleText) finaleSubtitleText.textContent = '恭喜所有幸運獲獎貴賓，感謝全體同仁與嘉賓熱情支持！';
-      if (finaleStatsSummary) finaleStatsSummary.textContent = '全場共頒發 ' + totalPrizes + ' 項大獎 ｜ 誕生 ' + totalWinners + ' 位幸運得主';
+      if (finaleStatsSummary) finaleStatsSummary.textContent = '全場共頒發 ' + totalPrizes + ' 項大獎 ｜ 誕生 ' + totalWinners + ' 位幸運得主 ｜ 圓滿達成';
       if (finaleModal) finaleModal.classList.add('active');
+    }
+
+    if (btnFinaleEncore) {
+      btnFinaleEncore.onclick = function() {
+        if (finaleModal) finaleModal.classList.remove('active');
+        confetti.stop();
+        visualEngine.stop();
+        if (festiveAmbiance) festiveAmbiance.stop();
+
+        // 1. 自動建立安可特別獎 (保留所有既有歷史紀錄與名冊排除狀態)
+        var encoreCount = state.prizes.filter(function(p){ return p.name.indexOf('加碼') !== -1 || p.name.indexOf('安可') !== -1; }).length + 1;
+        var encoreName = '加碼獎 (第 ' + encoreCount + ' 輪安可)';
+        var encorePrize = state.setupEncore(encoreName, 1);
+
+        // 2. 切換回設定畫面
+        viewStage.classList.remove('active');
+        viewSetup.classList.add('active');
+        if (btnEmergencyEdit) btnEmergencyEdit.classList.add('hidden');
+
+        // 3. 重新渲染設定畫面中的獎項清單
+        renderPrizesList();
+        if (candidateBadge && inputCandidates) {
+          var eligibleCount = state.config.allowDuplicates ? parseCandidateText(inputCandidates.value).length : state.candidatePool.length;
+          candidateBadge.textContent = eligibleCount + ' 人可抽 (已保證名冊連續性)';
+        }
+
+        if (state.candidatePool.length === 0 && !state.config.allowDuplicates) {
+          openDialog('🔥 開啟安可加碼抽獎！', '已為您新增加碼獎項：【' + encorePrize.name + '】。\n提示：目前名單上的所有人員先前皆已中獎。若要讓同仁繼續加碼抽，請於左側勾選「允許重複中獎」，或在名冊中追加新的人員名單！', false);
+        } else {
+          openDialog('🔥 開啟安可加碼抽獎！', '已自動為您新增加碼獎項：【' + encorePrize.name + '】。\n所有已中獎人員紀錄完整保留，且已抽中者維持排除防弊。\n您可以直接修改獎項名稱或名額，確認後點擊「進入抽獎大會舞台」即可立即展開加碼開獎！', false);
+        }
+      };
     }
 
     if (btnFinaleExportCsv) {
@@ -834,10 +914,16 @@ helpers_and_ui = r"""
       history.slice().reverse().forEach(function(rec) {
         var item = document.createElement('div');
         item.className = 'history-item';
+        var timeStr = rec.timestamp || '';
+        if (timeStr.indexOf(' ') !== -1) {
+          timeStr = timeStr.split(' ')[1];
+        } else if (timeStr.indexOf('T') !== -1) {
+          timeStr = timeStr.split('T')[1].split('.')[0].replace('Z', '');
+        }
         item.innerHTML = 
           '<div class="history-item-top">' +
             '<span class="history-prize-tag">' + escapeHtml(rec.prizeName) + '</span>' +
-            '<span class="history-item-time">' + escapeHtml(rec.timestamp.split(' ')[1] || rec.timestamp) + '</span>' +
+            '<span class="history-item-time">' + escapeHtml(timeStr) + '</span>' +
           '</div>' +
           '<div class="history-winner-name">' + escapeHtml(rec.winnerName) + '</div>';
         historyFeed.appendChild(item);

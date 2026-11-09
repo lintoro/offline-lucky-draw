@@ -50,6 +50,22 @@
   }
 
   /**
+   * 格式化使用者在地時區標準時間 (YYYY-MM-DD HH:mm:ss)
+   * 絕不使用 UTC 偏差字串，無多餘小數點毫秒，精準至秒
+   */
+  function formatLocalTimestamp(date) {
+    var d = date || new Date();
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    var year = d.getFullYear();
+    var month = pad(d.getMonth() + 1);
+    var day = pad(d.getDate());
+    var hours = pad(d.getHours());
+    var minutes = pad(d.getMinutes());
+    var seconds = pad(d.getSeconds());
+    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+  }
+
+  /**
    * 解析並正規化名單字串：過濾空白行、修剪頭尾空格
    * @param {string} rawText
    * @returns {string[]}
@@ -466,7 +482,7 @@
       sequence: this.history.length + 1,
       prizeName: pending.prizeName,
       winnerName: pending.winnerName,
-      timestamp: new Date().toISOString()
+      timestamp: formatLocalTimestamp(new Date())
     };
     this.history.push(record);
 
@@ -556,7 +572,7 @@
     var prize = this.prizes.find(function (p) { return p.id === pending.prizeId; });
     var winners = pending.winners;
     var records = [];
-    var nowIso = new Date().toISOString();
+    var nowIso = formatLocalTimestamp(new Date());
 
     for (var i = 0; i < winners.length; i++) {
       var w = winners[i];
@@ -631,6 +647,38 @@
     this.status = 'READY';
     this._notify('READY_FOR_NEXT');
     return this.status;
+  };
+
+  /**
+   * 檢查當前所有獎項配額是否已全數開出完畢
+   * @returns {boolean}
+   */
+  StateManager.prototype.isAllCompleted = function () {
+    var totalRemaining = this.prizes.reduce(function (sum, p) { return sum + (p.remainingQuota || 0); }, 0);
+    return totalRemaining <= 0;
+  };
+
+  /**
+   * 建立安可加碼獎 (Encore)
+   * 保留既有名冊與排除狀態，新增一個加碼獎項，狀態轉為 SETUP 便於確認或直接開抽
+   * @param {string} [encorePrizeName]
+   * @param {number} [quota]
+   * @returns {object}
+   */
+  StateManager.prototype.setupEncore = function (encorePrizeName, quota) {
+    encorePrizeName = encorePrizeName || '加碼獎 (安可特別獎)';
+    quota = (typeof quota === 'number' && quota > 0) ? quota : 1;
+    var newPrize = {
+      id: 'prize_encore_' + Date.now() + '_' + (this.prizes.length + 1),
+      name: encorePrizeName,
+      totalQuota: quota,
+      remainingQuota: quota
+    };
+    this.prizes.push(newPrize);
+    this.config.currentPrizeId = newPrize.id;
+    this.status = 'SETUP';
+    this._notify('ENCORE_ADDED', newPrize);
+    return newPrize;
   };
 
   /**
