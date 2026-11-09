@@ -411,10 +411,67 @@ helpers_and_ui = r"""
     if (btnStartStage) {
       btnStartStage.onclick = function() {
         audio.init();
-        if (!state.validate()) {
-          openDialog('無法進入舞台', '請先輸入至少一位名單人員，並確保獎項配額大於 0。', false);
+
+        var candidateText = inputCandidates ? inputCandidates.value : '';
+        var parsedCandidates = parseCandidateText(candidateText);
+
+        if (parsedCandidates.length === 0) {
+          openDialog('無法進入舞台', '候選人名冊至少需輸入 1 位人員姓名！', false);
+          if (inputCandidates) inputCandidates.focus();
           return;
         }
+
+        if (!state.prizes || state.prizes.length === 0) {
+          openDialog('無法進入舞台', '請至少設定一個獎項！', false);
+          return;
+        }
+
+        var totalPrizeQuota = state.prizes.reduce(function(sum, p) {
+          return sum + (parseInt(p.totalQuota, 10) || 0);
+        }, 0);
+        if (totalPrizeQuota <= 0) {
+          openDialog('無法進入舞台', '各獎項合計名額必須大於 0！', false);
+          return;
+        }
+
+        // 檢查是否為「上一輪抽獎已全數開出完畢」
+        var isAllDrawn = state.prizes.every(function(p) {
+          return (parseInt(p.remainingQuota, 10) || 0) <= 0;
+        });
+        var hasHistory = state.history && state.history.length > 0;
+
+        if (hasHistory && isAllDrawn) {
+          // 上一輪抽獎已圓滿結束，彈窗確認開啟全新一輪抽獎大會
+          openDialog(
+            '開啟全新一輪抽獎',
+            '上一輪抽獎已全數開出完畢（共產生 ' + state.history.length + ' 筆得獎紀錄）。\n點擊「確定」將保留目前名冊（' + parsedCandidates.length + ' 人）與獎項設定，並展開全新一輪抽獎大會！',
+            true,
+            function() {
+              state.reset();
+              state.setInputText(candidateText);
+              switchToStage();
+            }
+          );
+          return;
+        }
+
+        // 若 candidatePool 空了（例如名單先前被抽光但獎項還有剩額，或未同步）
+        if (state.candidatePool.length === 0 && parsedCandidates.length > 0) {
+          state.setInputText(candidateText);
+        }
+
+        if (!state.validate()) {
+          var remQuota = state.prizes.reduce(function(sum, p) { return sum + (p.remainingQuota || 0); }, 0);
+          if (remQuota <= 0) {
+            openDialog('無法進入舞台', '目前所有獎項名額均已抽滿！請新增獎項名額或重置大會。', false);
+          } else if (state.candidatePool.length === 0) {
+            openDialog('無法進入舞台', '候選人名冊可抽人數不足！請於名冊欄位新增更多名單。', false);
+          } else {
+            openDialog('無法進入舞台', '請確認候選人名冊至少 1 人，且獎項剩餘配額大於 0。', false);
+          }
+          return;
+        }
+
         switchToStage();
       };
     }
@@ -450,6 +507,9 @@ helpers_and_ui = r"""
           viewSetup.classList.add('active');
           btnEmergencyEdit.classList.add('hidden');
           renderPrizeInputs();
+          if (candidateBadge && inputCandidates) {
+            candidateBadge.textContent = parseCandidateText(inputCandidates.value).length + ' 人登記';
+          }
         });
       };
     }
@@ -507,7 +567,7 @@ helpers_and_ui = r"""
       var s = state.getState();
       var ordered = state.getOrderedPrizes();
 
-      if (candidateBadge) candidateBadge.textContent = s.candidatePool.length + ' 人登記';
+      if (candidateBadge && inputCandidates) candidateBadge.textContent = parseCandidateText(inputCandidates.value).length + ' 人登記';
       if (historyCounter) historyCounter.textContent = s.history.length + ' 人獲獎';
       if (historyCounterBadge) historyCounterBadge.textContent = s.history.length + '人';
       if (stageCandidatesRemaining) stageCandidatesRemaining.textContent = s.candidatePool.length + ' 人';
