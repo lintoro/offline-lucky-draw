@@ -675,7 +675,8 @@
       name: encorePrizeName,
       totalQuota: quota,
       remainingQuota: quota,
-      mode: (preferredMode && preferredMode !== 'RANDOM') ? preferredMode : null
+      mode: (preferredMode && preferredMode !== 'RANDOM') ? preferredMode : null,
+      isEncore: true
     };
     this.prizes.push(newPrize);
     this.config.currentPrizeId = newPrize.id;
@@ -700,15 +701,21 @@
 
   /**
    * 完全重置銷毀歷程 (RESET: ANY -> SETUP)
+   * 移除所有現場安可加碼獎項，回復成最初設定的獎項架構
    */
   StateManager.prototype.reset = function () {
     this._pendingSpin = null;
     this.history = [];
     this.winCounts = {};
     this.candidatePool = this.initialCandidates.slice();
+    this.prizes = this.prizes.filter(function (p) {
+      return !p.isEncore && (!p.id || p.id.indexOf('prize_encore_') !== 0);
+    });
     this.prizes.forEach(function (p) {
       p.remainingQuota = p.totalQuota;
     });
+    var ordered = this.getOrderedPrizes();
+    this.config.currentPrizeId = ordered.length > 0 ? ordered[0].id : '';
     this._scheduleAnimationModes();
     this.status = 'SETUP';
     this.validate();

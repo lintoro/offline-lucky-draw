@@ -90,6 +90,14 @@ test('Encore & Grand Finale - 2. 安可加碼獎流程、歷史紀錄延續與�
   // 加碼抽完後，再次辨識為全數開出
   assert.ok(sm.isAllCompleted(), '加碼抽完後再次進入 isAllCompleted 狀態');
   assert.equal(sm.continueSpin(), 'COMPLETED');
+
+  // 重置大會後，必須移除所有加碼獎項並回復最初架構 (預設 BOTTOM_UP 應從 p2 二獎開始)
+  sm.reset();
+  assert.equal(sm.prizes.length, 2, '重置大會後必須移除安可加碼獎，回復最初 2 項獎項架構');
+  assert.ok(sm.prizes.every(p => !p.isEncore && !p.id.startsWith('prize_encore_')), '不得殘留任何安可加碼獎項');
+  assert.equal(sm.history.length, 0, '重置大會後中獎紀錄必須清空');
+  assert.equal(sm.candidatePool.length, 4, '重置大會後候選池必須恢復最初人數');
+  assert.equal(sm.getCurrentPrize().id, 'p2', '重置大會後當前獎項必須回復為最初抽獎順序的第一個獎項 (p2)');
 });
 
 test('DOM & UI Transition - 3. HTML 中具備光影幕簾遮罩與安可加碼按鈕，終局按鍵類別定義完整', () => {

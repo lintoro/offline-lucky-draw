@@ -1051,6 +1051,7 @@ helpers_and_ui = r"""
           if (festiveAmbiance) festiveAmbiance.stop();
           if (winnerModal) winnerModal.classList.remove('active');
           if (finaleModal) finaleModal.classList.remove('active');
+          if (modalEncoreSetup) modalEncoreSetup.classList.remove('active');
           if (finaleTimer) clearTimeout(finaleTimer);
           if (chkLockBatchMode) chkLockBatchMode.checked = false;
           if (selBatchMode) selBatchMode.value = '';
